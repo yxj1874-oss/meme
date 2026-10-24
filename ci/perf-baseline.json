@@ -8,8 +8,7 @@
           "isect_tests": 11167107,
           "physics_steps": 768,
           "gpu_bytes_peak": 690112
-        },
-        "wall_ms_median": 39.49491599999999
+        }
       },
       "golden/p0/g16_physics_extremes/scene_far.json": {
         "work": {
@@ -17,8 +16,7 @@
           "isect_tests": 0,
           "physics_steps": 4000,
           "gpu_bytes_peak": 2352
-        },
-        "wall_ms_median": 1.622208999999998
+        }
       }
     }
   }

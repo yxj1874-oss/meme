@@ -18,7 +18,7 @@
     "thresholds": "node tools/thresholds.ts --check",
     "golden": "node src/cli.ts golden verify --require-hashes",
     "determinism": "node src/cli.ts determinism-check golden/p0/g01_det_double_run/scene.json golden/p0/g03_det_plan_invariance/scene.json golden/p0/g16_physics_extremes/scene_far.json",
-    "perf": "node tools/perf.ts --check --require-baseline",
+    "perf": "node --expose-gc tools/perf.ts --check --require-baseline --base out/perf-base",
     "mutants": "node tools/mutate.ts",
     "ci": "npm run lint && npm run typecheck && npm test && npm run golden:check-generated && npm run thresholds && npm run golden && npm run determinism && npm run perf"
   },

@@ -14,6 +14,12 @@ Node 24.22.0 (`.nvmrc`), then `npm ci`. Byte-comparable goldens need the referen
 ci/run-in-ref.sh npm run ci
 ```
 
+The perf gate compares wall time with the parent commit on the same machine. CI checks the parent out as a worktree; to do the same locally:
+
+```bash
+git worktree add --detach out/perf-base HEAD~1
+```
+
 ## Commands
 
 ```bash

@@ -12,10 +12,21 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          # The parent commit is the wall-time baseline of the perf gate (MT3).
+          fetch-depth: 2
 
       - name: Install dependencies
         run: ci/run-in-ref.sh npm ci --no-fund --no-audit
+
+      - name: Parent commit as the perf A/B base
+        run: |
+          if git rev-parse --verify --quiet HEAD~1 >/dev/null; then
+            git worktree add --detach out/perf-base HEAD~1
+          else
+            echo "no parent commit: the wall-time A/B will be skipped"
+          fi
 
       - name: Lint, types, unit tests, goldens, determinism, perf
         run: ci/run-in-ref.sh npm run ci
@@ -29,7 +40,7 @@ jobs:
 
       - name: Upload failure artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: p0-failure-artifacts
           path: |

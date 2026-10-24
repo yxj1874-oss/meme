@@ -45,7 +45,7 @@
 |---|---|
 | MT1 schema lint | 解析 `$ref` 后，每个 `type:number` 节点都有 `x-unit` ∈ 单位表、下界（`minimum`/`exclusiveMinimum`）、上界；每个 integer 都有上下界；每个 object 都是 `additionalProperties:false` 或带 schema；每个 string 都有 const / enum / pattern / maxLength 之一。违规数 = 0。 |
 | MT2 变异 | ∀ 精选变异 m：至少一个 golden 变红（§3.9）。在参考基底上以 `golden verify --require-hashes` 运行：哈希检查被跳过即判红。实现时发现一个改 JCS 数字格式的变异会顺带改变 substrate_id，使哈希检查被静默跳过，这条规则就是为它加的。 |
-| MT3 性能 | 确定性工作量计数器（光线数、求交次数、物理步数、分配字节数）≤ 1.10 × 基线；ms/frame 的 5 次中位数 ≤ 1.10 × 同类 runner 的基线中位数，超出时自动复跑 2 次，仍超出才判红。 |
+| MT3 性能 | 确定性工作量计数器（光线数、求交次数、物理步数、分配字节数）≤ 1.10 × 存储基线（按 substrate_id，与 CPU 无关，精确比较）。墙钟时间**只在同一台机器上与父提交比较**（实现修订）：父提交检出为 git worktree，两棵树在同一进程里交替运行 9 轮，每个样本至少 100 ms、开始前强制 GC；median(head) / median(base) ≤ 1.10，超出时重测 2 次，仍超出才判红。第一次 CI 证明了存储墙钟基线不可行：GitHub runner 比 M6 慢 2.56 倍，而工作量计数器完全相同。 |
 | MT4 本地 = CI | ∀ golden g、∀ 输出文件 f：sha256(本地参考基底) = sha256(CI)。实现：`expected.json` 在本地参考容器里由 `golden rebase` 生成并提交，CI 在同一镜像规格里跑 `golden verify --require-hashes`，任何一个文件哈希不同即红。 |
 | MT5 阈值锁 | 所有 oracle 容忍度的哈希写在 `golden/p0/thresholds.lock`；改动容忍度而没有附带引用该场景 id 的 `docs/adr/*.md`，CI 判红。这条用来机器化执行"禁止用放大阈值代替修复"。 |
 | MT6 迁移往返 | 每个 golden 走 migrate → rollback → migrate，scene_hash 不变（v2 出现后启用）。 |
