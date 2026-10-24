@@ -1,0 +1,92 @@
+{
+  "id": "g11_mc_convergence_slope",
+  "title": "RMSE falls as N^-1/2 with the right constant (independent sampler)",
+  "covers": [
+    "convergence"
+  ],
+  "kills": [
+    "sample-index-not-in-counter",
+    "pixel-correlation"
+  ],
+  "runs": [
+    {
+      "name": "n1",
+      "scene": "scene_n1.json"
+    },
+    {
+      "name": "n4",
+      "scene": "scene_n4.json"
+    },
+    {
+      "name": "n16",
+      "scene": "scene_n16.json"
+    },
+    {
+      "name": "n64",
+      "scene": "scene_n64.json"
+    },
+    {
+      "name": "n256",
+      "scene": "scene_n256.json"
+    },
+    {
+      "name": "n1024",
+      "scene": "scene_n1024.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1-A2",
+      "kind": "convergence",
+      "runs": [
+        "n1",
+        "n4",
+        "n16",
+        "n64",
+        "n256",
+        "n1024"
+      ],
+      "spp": [
+        1,
+        4,
+        16,
+        64,
+        256,
+        1024
+      ],
+      "mask": {
+        "ids_in": [
+          "slab"
+        ]
+      },
+      "expect": {
+        "fn": "split_sky_tilted_plane",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "sigma": {
+        "fn": "split_sky_sigma",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "slope": [
+        -0.55,
+        -0.45
+      ],
+      "calibration": [
+        0.9,
+        1.1
+      ],
+      "calibration_min_spp": 4,
+      "tol": {
+        "value": 0.05,
+        "derivation": "slope sd = 0.022 / sqrt(sum (x_i - xbar)^2) = 3.8e-3 (13 sd); RMSE relative sd <= 2.2% with P = 1024 (calibration 10% ~ 4.5 sd)",
+        "source": "OLS slope variance"
+      }
+    }
+  ]
+}

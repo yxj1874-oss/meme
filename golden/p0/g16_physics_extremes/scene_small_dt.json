@@ -1,0 +1,44 @@
+{
+  "v": 1,
+  "seed": 1603,
+  "physics": {
+    "integrator": "xpbd_unconstrained_p0",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.00001,
+    "steps": 10000,
+    "record_every_steps": 1000
+  },
+  "materials": {
+    "m": {
+      "base_color": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "objects": {
+    "b_slow": {
+      "shape": "sphere",
+      "center_m": [
+        1,
+        1,
+        1
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  }
+}

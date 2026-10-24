@@ -1,0 +1,127 @@
+{
+  "v": 1,
+  "seed": 1919,
+  "camera": {
+    "model": "pinhole",
+    "position_m": [
+      0,
+      -6,
+      2.5
+    ],
+    "look_at_m": [
+      0,
+      0,
+      0.8
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "vfov_rad": 0.8
+  },
+  "environment": {
+    "type": "constant",
+    "luminance_cdm2": 0.5,
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
+  "render": {
+    "width_px": 64,
+    "height_px": 48,
+    "spp": 16,
+    "max_bounces": 3,
+    "sampler": "independent",
+    "integrator": "pt_bsdf_p0",
+    "display_white_cdm2": 2
+  },
+  "physics": {
+    "integrator": "xpbd_unconstrained_p0",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.00390625,
+    "steps": 64,
+    "record_every_steps": 32
+  },
+  "materials": {
+    "m1": {
+      "base_color": [
+        0.7,
+        0.3,
+        0.3
+      ]
+    },
+    "m2": {
+      "base_color": [
+        0.3,
+        0.7,
+        0.3
+      ]
+    },
+    "floor": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "objects": {
+    "floor": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "floor"
+    },
+    "ball_a": {
+      "shape": "sphere",
+      "center_m": [
+        -1,
+        0,
+        0.6
+      ],
+      "radius_m": 0.25,
+      "material": "m1",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          2
+        ]
+      }
+    },
+    "ball_new": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        1,
+        1
+      ],
+      "radius_m": 0.4,
+      "material": "m1",
+      "body": {
+        "mass_kg": 0.5,
+        "velocity_m_s": [
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  }
+}

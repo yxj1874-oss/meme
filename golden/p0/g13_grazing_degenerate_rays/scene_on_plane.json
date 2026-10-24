@@ -1,0 +1,92 @@
+{
+  "v": 1,
+  "seed": 1313,
+  "camera": {
+    "model": "pinhole",
+    "position_m": [
+      -5,
+      0,
+      0
+    ],
+    "look_at_m": [
+      5,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "vfov_rad": 0.6
+  },
+  "environment": {
+    "type": "split",
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "upper_cdm2": 1,
+    "lower_cdm2": 0,
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
+  "render": {
+    "width_px": 65,
+    "height_px": 65,
+    "spp": 16,
+    "max_bounces": 2,
+    "sampler": "independent",
+    "integrator": "pt_bsdf_p0",
+    "display_white_cdm2": 1
+  },
+  "materials": {
+    "m": {
+      "base_color": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    }
+  },
+  "objects": {
+    "ground": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "m"
+    },
+    "tangent": {
+      "shape": "sphere",
+      "center_m": [
+        2,
+        0,
+        0.5
+      ],
+      "radius_m": 0.5,
+      "material": "m"
+    },
+    "tiny": {
+      "shape": "sphere",
+      "center_m": [
+        1,
+        0.3,
+        0.3
+      ],
+      "radius_m": 0.001,
+      "material": "m"
+    }
+  }
+}

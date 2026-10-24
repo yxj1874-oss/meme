@@ -1,0 +1,17 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "on_plane": {
+      "aov.id.u32": "sha256:26e076bad99e0582fc8ad20e0b458da301cddb913dd841ca347480ed0ea6e1c0",
+      "aov.m2.pfm": "sha256:c5bf1380194a9c5fb36e5716dadbdd8194f328b271a4fb8a22dd0405e0a98fa6",
+      "image.linear.pfm": "sha256:216d81c8fa848e93bf7067532b9afd9d07711b0bfe42a20025f51b46a110acf2",
+      "image.png": "sha256:db1e7532b467a0af7658372977d30fb611c62e0b267aef4ad2d4622c569208f4"
+    },
+    "grazing": {
+      "aov.id.u32": "sha256:05b71bfb03483334473258b5c1456a85b2764fbc908d8aa05f6dbb792d2eda8e",
+      "aov.m2.pfm": "sha256:d3c697db80aad8631b6bd66ccfb48535a26eaf760a8a558da9e376835549200d",
+      "image.linear.pfm": "sha256:b84313fed0483195bebd26db5a51cf5688decffe134cb03697f4ea542311d72f",
+      "image.png": "sha256:80900d476f10e8157519cc7e919b67ba0da59315447e3c7a7b1b9ca036d41730"
+    }
+  }
+}

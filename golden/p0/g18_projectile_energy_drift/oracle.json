@@ -1,0 +1,40 @@
+{
+  "id": "g18_projectile_energy_drift",
+  "title": "Semi-implicit Euler energy drift is exactly -n |g|^2 dt^2 / 2; kinetic energy bounded",
+  "covers": [
+    "analytic.physics",
+    "numeric.ke_bounded"
+  ],
+  "kills": [
+    "explicit-euler",
+    "double-gravity"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "energy_drift",
+      "run": "a",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "ke_bounded",
+      "run": "a",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    }
+  ]
+}

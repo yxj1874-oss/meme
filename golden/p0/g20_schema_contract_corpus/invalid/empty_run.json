@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "seed": 2020,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "objects": {
+    "a": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        1
+      ],
+      "radius_m": 1,
+      "material": "m"
+    }
+  }
+}

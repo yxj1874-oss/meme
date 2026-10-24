@@ -1,0 +1,460 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:meme:scene:v1",
+  "title": "meme scene contract v1 (P0 capability set)",
+  "description": "Declarative scene for the meme runtime. v1 accepts exactly what P0 can execute: spheres and planes, two-sided Lambert + emission, constant/split environment, pinhole camera, unconstrained XPBD bodies under gravity. Every float carries x-unit plus minimum/maximum. Cross-field rules live in x-semantic-checks and are enforced before any GPU work.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "seed", "materials", "objects"],
+  "anyOf": [
+    { "required": ["render"] },
+    { "required": ["physics"] }
+  ],
+  "dependentRequired": {
+    "render": ["camera", "environment"]
+  },
+  "properties": {
+    "v": {
+      "const": 1,
+      "description": "Schema version, bound to golden set p0. Changing it requires migrate_v1_to_v2 + rollback_v2_to_v1. Not patchable."
+    },
+    "seed": { "$ref": "#/$defs/Seed" },
+    "meta": { "$ref": "#/$defs/Meta" },
+    "camera": { "$ref": "#/$defs/Camera" },
+    "environment": { "$ref": "#/$defs/Environment" },
+    "render": { "$ref": "#/$defs/Render" },
+    "physics": { "$ref": "#/$defs/Physics" },
+    "materials": {
+      "type": "object",
+      "description": "Id-keyed map. Key order in the JSON text carries no meaning; the runtime iterates in byte order of the key.",
+      "propertyNames": { "$ref": "#/$defs/Id" },
+      "additionalProperties": { "$ref": "#/$defs/Material" },
+      "minProperties": 0,
+      "maxProperties": 256
+    },
+    "objects": {
+      "type": "object",
+      "description": "Id-keyed map of renderable and/or simulated objects. A sphere with `body` is dynamic; everything else is static.",
+      "propertyNames": { "$ref": "#/$defs/Id" },
+      "additionalProperties": { "$ref": "#/$defs/Object" },
+      "minProperties": 0,
+      "maxProperties": 4096
+    }
+  },
+
+  "$defs": {
+    "Seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "description": "Global seed. Every random source is rng(stream, counter) = Philox4x32-10(key=(seed, stream), counter). See x-rng-streams."
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "description": "Entity id. Lowercase ASCII so JSON Pointer paths need no escaping (/objects/ball_1/radius_m)."
+    },
+    "Meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Free text, excluded from scene_hash. Never read by the runtime.",
+      "properties": {
+        "name": { "type": "string", "maxLength": 64, "pattern": "^[\\x20-\\x7e]*$" },
+        "note": { "type": "string", "maxLength": 1024 }
+      }
+    },
+
+    "Coord_m": {
+      "type": "number",
+      "x-unit": "m",
+      "minimum": -10000,
+      "maximum": 10000
+    },
+    "Radius_m": {
+      "type": "number",
+      "x-unit": "m",
+      "minimum": 0.001,
+      "maximum": 1000
+    },
+    "DirComponent_1": {
+      "type": "number",
+      "x-unit": "1",
+      "minimum": -1,
+      "maximum": 1
+    },
+    "Unit01_1": {
+      "type": "number",
+      "x-unit": "1",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "Luminance_cdm2": {
+      "type": "number",
+      "x-unit": "cd/m2",
+      "minimum": 0,
+      "maximum": 1000000000
+    },
+    "DisplayWhite_cdm2": {
+      "type": "number",
+      "x-unit": "cd/m2",
+      "minimum": 0.000001,
+      "maximum": 1000000000
+    },
+    "Mass_kg": {
+      "type": "number",
+      "x-unit": "kg",
+      "minimum": 0.000001,
+      "maximum": 1000000
+    },
+    "VelocityComponent_m_s": {
+      "type": "number",
+      "x-unit": "m/s",
+      "minimum": -10000,
+      "maximum": 10000
+    },
+    "GravityComponent_m_s2": {
+      "type": "number",
+      "x-unit": "m/s2",
+      "minimum": -100,
+      "maximum": 100
+    },
+    "Dt_s": {
+      "type": "number",
+      "x-unit": "s",
+      "minimum": 0.00001,
+      "maximum": 0.1
+    },
+    "Vfov_rad": {
+      "type": "number",
+      "x-unit": "rad",
+      "minimum": 0.01,
+      "maximum": 3.0
+    },
+
+    "Vec3_Coord_m": {
+      "type": "array",
+      "x-unit": "m",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/Coord_m" }
+    },
+    "Vec3_Dir_1": {
+      "type": "array",
+      "x-unit": "1",
+      "description": "Direction; normalized by the runtime in f64. Norm must be >= 1e-3 (E_ZERO_VECTOR).",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/DirComponent_1" }
+    },
+    "Color_1": {
+      "type": "array",
+      "x-unit": "1",
+      "description": "Linear Rec.709 RGB, each channel in [0,1].",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/Unit01_1" }
+    },
+    "Vec3_Velocity_m_s": {
+      "type": "array",
+      "x-unit": "m/s",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/VelocityComponent_m_s" }
+    },
+    "Vec3_Gravity_m_s2": {
+      "type": "array",
+      "x-unit": "m/s2",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/GravityComponent_m_s2" }
+    },
+
+    "Camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "position_m", "look_at_m", "up", "vfov_rad"],
+      "properties": {
+        "model": { "const": "pinhole" },
+        "position_m": { "$ref": "#/$defs/Vec3_Coord_m" },
+        "look_at_m": { "$ref": "#/$defs/Vec3_Coord_m" },
+        "up": { "$ref": "#/$defs/Vec3_Dir_1" },
+        "vfov_rad": { "$ref": "#/$defs/Vfov_rad" }
+      }
+    },
+
+    "Environment": {
+      "description": "Infinitely distant emitter seen by rays that hit nothing. Radiance RGB = luminance_cdm2 * color / Y(color), Y = BT.709 luma weights.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "luminance_cdm2", "color"],
+          "properties": {
+            "type": { "const": "constant" },
+            "luminance_cdm2": { "$ref": "#/$defs/Luminance_cdm2" },
+            "color": { "$ref": "#/$defs/Color_1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "up", "upper_cdm2", "lower_cdm2", "color"],
+          "description": "Directions d with dot(d, up) > 0 see upper_cdm2, the rest see lower_cdm2. Gives analytic irradiance (1+cos(theta))/2 on tilted planes.",
+          "properties": {
+            "type": { "const": "split" },
+            "up": { "$ref": "#/$defs/Vec3_Dir_1" },
+            "upper_cdm2": { "$ref": "#/$defs/Luminance_cdm2" },
+            "lower_cdm2": { "$ref": "#/$defs/Luminance_cdm2" },
+            "color": { "$ref": "#/$defs/Color_1" }
+          }
+        }
+      ]
+    },
+
+    "Render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width_px", "height_px", "spp", "max_bounces", "sampler", "integrator", "display_white_cdm2"],
+      "properties": {
+        "width_px": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "height_px": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "spp": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536,
+          "description": "Fixed samples per pixel. Sample s of pixel p always uses counter (px, py, s, dim); pass/tile splitting must not change output bytes."
+        },
+        "max_bounces": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 256,
+          "description": "Number of scattering events. Emission is collected at surface interactions 1..max_bounces+1; the environment is collected by any ray that escapes. No Russian roulette in v1."
+        },
+        "sampler": { "enum": ["independent"] },
+        "integrator": { "enum": ["pt_bsdf_p0"] },
+        "display_white_cdm2": {
+          "$ref": "#/$defs/DisplayWhite_cdm2",
+          "description": "Linear radiance mapped to display 1.0 before clamp + sRGB OETF in the PNG. Does not affect the linear PFM."
+        }
+      }
+    },
+
+    "Physics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["integrator", "gravity_m_s2", "dt_s", "steps", "record_every_steps"],
+      "properties": {
+        "integrator": {
+          "enum": ["xpbd_unconstrained_p0"],
+          "description": "XPBD loop of Macklin et al. 2016 Alg.1 with zero constraints, delta form: dx = dt*v + dt^2*g; x += dx; v = dx * (1/dt)."
+        },
+        "gravity_m_s2": { "$ref": "#/$defs/Vec3_Gravity_m_s2" },
+        "dt_s": { "$ref": "#/$defs/Dt_s" },
+        "steps": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "record_every_steps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "description": "State snapshot at step 0, every k steps, and at the final step."
+        }
+      }
+    },
+
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_color"],
+      "description": "Two-sided Lambert (albedo = base_color) plus two-sided Lambertian emission.",
+      "properties": {
+        "base_color": { "$ref": "#/$defs/Color_1" },
+        "emissive_cdm2": { "$ref": "#/$defs/Luminance_cdm2", "default": 0 },
+        "emissive_color": { "$ref": "#/$defs/Color_1", "default": [1, 1, 1] }
+      }
+    },
+
+    "Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mass_kg", "velocity_m_s"],
+      "description": "Makes a sphere dynamic. center_m is the position at step 0.",
+      "properties": {
+        "mass_kg": { "$ref": "#/$defs/Mass_kg" },
+        "velocity_m_s": { "$ref": "#/$defs/Vec3_Velocity_m_s" }
+      }
+    },
+
+    "Object": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shape", "center_m", "radius_m", "material"],
+          "properties": {
+            "shape": { "const": "sphere" },
+            "center_m": { "$ref": "#/$defs/Vec3_Coord_m" },
+            "radius_m": { "$ref": "#/$defs/Radius_m" },
+            "material": { "$ref": "#/$defs/Id" },
+            "body": { "$ref": "#/$defs/Body" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shape", "point_m", "normal", "material"],
+          "description": "Infinite static plane through point_m. Rays with |dot(dir, normal)| < 2^-20 are treated as parallel (miss).",
+          "properties": {
+            "shape": { "const": "plane" },
+            "point_m": { "$ref": "#/$defs/Vec3_Coord_m" },
+            "normal": { "$ref": "#/$defs/Vec3_Dir_1" },
+            "material": { "$ref": "#/$defs/Id" }
+          }
+        }
+      ]
+    },
+
+    "JsonPointer": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^(/([^/~]|~[01])*)*$"
+    },
+    "PatchEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "base_scene_hash", "ops"],
+      "description": "The only interaction unit. Applied atomically to the scene whose hash is base_scene_hash, then the whole result is re-validated (schema + semantic). Any failure leaves the scene unchanged.",
+      "properties": {
+        "v": { "const": 1 },
+        "base_scene_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "ops": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/PatchOp" }
+        }
+      }
+    },
+    "PatchOp": {
+      "description": "RFC 6902 operation. `value` is checked after application by validating the resulting scene.",
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "path", "value"],
+          "properties": { "op": { "const": "add" }, "path": { "$ref": "#/$defs/JsonPointer" }, "value": true }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "path"],
+          "properties": { "op": { "const": "remove" }, "path": { "$ref": "#/$defs/JsonPointer" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "path", "value"],
+          "properties": { "op": { "const": "replace" }, "path": { "$ref": "#/$defs/JsonPointer" }, "value": true }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "from", "path"],
+          "properties": { "op": { "const": "move" }, "from": { "$ref": "#/$defs/JsonPointer" }, "path": { "$ref": "#/$defs/JsonPointer" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "from", "path"],
+          "properties": { "op": { "const": "copy" }, "from": { "$ref": "#/$defs/JsonPointer" }, "path": { "$ref": "#/$defs/JsonPointer" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["op", "path", "value"],
+          "properties": { "op": { "const": "test" }, "path": { "$ref": "#/$defs/JsonPointer" }, "value": true }
+        }
+      ]
+    }
+  },
+
+  "x-unit-vocabulary": {
+    "source": "UCUM case-sensitive codes (https://ucum.org/ucum)",
+    "units": {
+      "1": "dimensionless (albedo, color channel, direction component)",
+      "m": "metre",
+      "m/s": "metre per second",
+      "m/s2": "metre per second squared",
+      "kg": "kilogram",
+      "s": "second",
+      "rad": "radian",
+      "cd/m2": "candela per square metre (luminance)"
+    },
+    "reserved": {
+      "cd": "luminous intensity, for point/spot lights (P1+)",
+      "m2": "area",
+      "kg/m3": "density (P2)",
+      "m/N": "XPBD compliance alpha (P2)"
+    }
+  },
+
+  "x-rng-streams": {
+    "algorithm": "Philox4x32-10, Salmon et al. 2011 'Parallel Random Numbers: As Easy as 1, 2, 3' (SC11); KAT vectors from Random123 kat_vectors",
+    "key": "(seed, stream)",
+    "to_unit_float": "f32(u >> 8) * 2^-24, exact in [0, 1)",
+    "id_word": "idhash32(id) = FNV-1a 32 of the UTF-8 id; distinct within its map or E_ID_HASH_COLLISION",
+    "streams": {
+      "0": { "name": "sampling", "counter": "(px, py, sample_index, dim_block)", "dim_block": "0 = pixel jitter (u0,u1); 1+b = bounce b: (u0,u1) direction, u2 reserved RR, u3 reserved light select" },
+      "1": { "name": "procedural_noise", "status": "reserved P4" },
+      "2": { "name": "fluid_perturbation", "status": "reserved P4" },
+      "3": { "name": "physics_perturbation", "counter": "(idhash32(id), step, component, 0)", "status": "reserved P2" },
+      "4": { "name": "harness_fuzz", "counter": "(case, field, trial, 0)", "owner": "oracle tooling only, never the runtime" },
+      "5": { "name": "harness_schedule", "counter": "(run, tile, 0, 0)", "owner": "oracle tooling only: tile/dispatch order permutation" },
+      "6": { "name": "substrate_probe", "counter": "(index, operand, 0, 0)", "owner": "FBH float-behaviour probe inputs; key seed is fixed, independent of any scene" }
+    },
+    "rules": [
+      "Stream ids are never reused or renumbered.",
+      "Scene work may only use streams 0-3; 4-5 belong to the test harness; 6 only feeds the substrate probe."
+    ]
+  },
+
+  "x-canonical": {
+    "steps": [
+      "strict parse: reject duplicate keys (E_DUPLICATE_KEY) and non-finite numbers (E_NONFINITE)",
+      "validate against this schema, then x-semantic-checks",
+      "expand defaults",
+      "drop /meta",
+      "serialize with RFC 8785 JSON Canonicalization Scheme"
+    ],
+    "scene_hash": "\"sha256:\" + hex(SHA-256(canonical bytes))"
+  },
+
+  "x-semantic-checks": [
+    { "code": "E_REF_MISSING", "rule": "every objects.*.material is a key of materials" },
+    { "code": "E_RENDER_REQUIRES", "rule": "render present => camera and environment present" },
+    { "code": "E_EMPTY_RUN", "rule": "render or physics present" },
+    { "code": "E_CAMERA_DEGENERATE", "rule": "|look_at_m - position_m| >= 1e-3 * max(1, |position_m|) and |normalize(up) x normalize(look_at_m - position_m)| >= 1e-3" },
+    { "code": "E_ZERO_VECTOR", "rule": "|v| >= 1e-3 for camera.up, plane normal, environment.up" },
+    { "code": "E_PRECISION", "rule": "sphere radius_m >= 2^-12 * (|center_m| + radius_m), leaving >= 12 bits of f32 mantissa for hit-point precision" },
+    { "code": "E_COLOR_LUMINANCE", "rule": "luminance > 0 => Y(color) >= 1e-3 with Y = 0.2126 R + 0.7152 G + 0.0722 B (ITU-R BT.709)" },
+    { "code": "E_PRECISION_DT", "rule": "if |g| > 0, for every dynamic body: |g| * dt_s >= 2^-16 * V with V = |velocity_m_s| + |g| * dt_s * steps (exact speed bound for unconstrained motion). Guarantees each step's velocity increment is >= 128 ulp(V), so gravity cannot be rounded away in f32." },
+    { "code": "E_BUDGET", "rule": "width_px * height_px * spp * (max_bounces + 1) * max(1, |objects|) <= 2^36 and |bodies| * steps <= 2^32" },
+    { "code": "E_ID_HASH_COLLISION", "rule": "idhash32 distinct among object ids and among material ids" }
+  ],
+
+  "x-error-codes": {
+    "schema": {
+      "type": "E_TYPE",
+      "minimum|maximum": "E_RANGE",
+      "additionalProperties": "E_UNKNOWN_PROPERTY",
+      "required": "E_REQUIRED",
+      "pattern|propertyNames": "E_PATTERN",
+      "const|enum": "E_ENUM",
+      "oneOf|anyOf": "E_VARIANT",
+      "dependentRequired": "E_RENDER_REQUIRES",
+      "minItems|maxItems": "E_ARITY",
+      "maxProperties": "E_TOO_MANY"
+    },
+    "parse": ["E_DUPLICATE_KEY", "E_NONFINITE", "E_JSON_SYNTAX"],
+    "patch": ["E_PATCH_BASE_MISMATCH", "E_PATCH_PATH_NOT_FOUND", "E_PATCH_TEST_FAILED", "E_PATCH_FORBIDDEN_PATH", "E_PATCH_INVALID_OP", "E_PATCH_INVALID_RESULT"],
+    "report_shape": "{ code, path (JSON Pointer into the instance), op_index? (patches), detail }"
+  },
+
+  "x-patch-rules": {
+    "forbidden_paths": ["", "/v"],
+    "result_validation": "full schema + semantic checks on the patched scene; atomic on failure",
+    "conformance": "must pass json-patch-tests (github.com/json-patch/json-patch-tests) tests.json and spec_tests.json"
+  },
+
+  "x-migrations": {
+    "current": 1,
+    "chain": [],
+    "rule": "v(n) -> v(n+1) ships migrate_vN_to_vN+1 and rollback_vN+1_to_vN. Rollback is lossless or fails with E_ROLLBACK_LOSSY listing the paths that would be dropped. CI runs every golden through migrate -> rollback -> migrate and requires identical scene_hash."
+  }
+}

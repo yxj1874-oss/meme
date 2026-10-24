@@ -1,0 +1,25 @@
+{
+  "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7": {
+    "adapter": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+    "scenes": {
+      "golden/p0/g01_det_double_run/scene.json": {
+        "work": {
+          "rays": 1595301,
+          "isect_tests": 11167107,
+          "physics_steps": 768,
+          "gpu_bytes_peak": 690112
+        },
+        "wall_ms_median": 39.49491599999999
+      },
+      "golden/p0/g16_physics_extremes/scene_far.json": {
+        "work": {
+          "rays": 0,
+          "isect_tests": 0,
+          "physics_steps": 4000,
+          "gpu_bytes_peak": 2352
+        },
+        "wall_ms_median": 1.622208999999998
+      }
+    }
+  }
+}

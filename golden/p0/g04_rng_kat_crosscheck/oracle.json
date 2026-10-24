@@ -1,0 +1,44 @@
+{
+  "id": "g04_rng_kat_crosscheck",
+  "title": "Philox4x32-10 equals Random123 known answers; WGSL equals TypeScript bit for bit",
+  "covers": [
+    "rng"
+  ],
+  "kills": [
+    "philox-rounds",
+    "philox-constant",
+    "unit-float-shift",
+    "mulhi-limbs"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "rng_kat",
+      "source": "Random123 tests/kat_vectors, philox4x32 rows"
+    },
+    {
+      "id": "A2-A4",
+      "kind": "rng_gpu_cpu",
+      "seeds": [
+        0,
+        1,
+        2654435769,
+        4294967295
+      ],
+      "streams": [
+        0,
+        3,
+        4,
+        5
+      ],
+      "sequential": 524288,
+      "random": 524288,
+      "tol": {
+        "value": 0,
+        "derivation": "bit-exact",
+        "source": "WGSL §6.2.3: integer ops wrap modulo 2^32 exactly; u>>8 < 2^24 converts exactly"
+      }
+    }
+  ]
+}

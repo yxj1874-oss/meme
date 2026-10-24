@@ -1,0 +1,141 @@
+{
+  "id": "g15_validator_negative_controls",
+  "title": "Injected NaN/Inf and a 1.001 BSDF gain are caught exactly where they were injected",
+  "covers": [
+    "numeric.nan",
+    "validators"
+  ],
+  "kills": [
+    "nan-mask",
+    "scan-first-frame-only",
+    "scan-red-only",
+    "validator-always-pass"
+  ],
+  "runs": [
+    {
+      "name": "clean",
+      "scene": "scene_furnace.json"
+    },
+    {
+      "name": "nan_pixel",
+      "scene": "scene_furnace.json",
+      "faults": {
+        "renderFaults": {
+          "FAULT_KIND": 1,
+          "FAULT_X": 17,
+          "FAULT_Y": 9,
+          "FAULT_C": 1
+        }
+      }
+    },
+    {
+      "name": "inf_pixel",
+      "scene": "scene_furnace.json",
+      "faults": {
+        "renderFaults": {
+          "FAULT_KIND": 2,
+          "FAULT_X": 0,
+          "FAULT_Y": 0,
+          "FAULT_C": 0
+        }
+      }
+    },
+    {
+      "name": "nan_body",
+      "scene": "scene_fall.json",
+      "faults": {
+        "physicsFaults": {
+          "FAULT_KIND": 3,
+          "FAULT_BODY": 0,
+          "FAULT_STEP": 100,
+          "FAULT_C": 2
+        }
+      }
+    },
+    {
+      "name": "gain",
+      "scene": "scene_furnace.json",
+      "faults": {
+        "renderFaults": {
+          "BSDF_GAIN": 1.001
+        }
+      }
+    }
+  ],
+  "asserts": [
+    {
+      "id": "15a",
+      "kind": "nonfinite_set",
+      "run": "nan_pixel",
+      "image": [
+        {
+          "x": 17,
+          "y": 9,
+          "c": 1,
+          "kind": "nan"
+        }
+      ],
+      "exit_code": 4
+    },
+    {
+      "id": "15b",
+      "kind": "nonfinite_set",
+      "run": "inf_pixel",
+      "image": [
+        {
+          "x": 0,
+          "y": 0,
+          "c": 0,
+          "kind": "inf"
+        }
+      ],
+      "exit_code": 4
+    },
+    {
+      "id": "15c",
+      "kind": "nonfinite_first",
+      "run": "nan_body",
+      "physics": {
+        "step": 100,
+        "body": "ball",
+        "field": "v.z"
+      },
+      "exit_code": 4
+    },
+    {
+      "id": "15d",
+      "kind": "nonfinite_set",
+      "run": "clean",
+      "image": [],
+      "exit_code": 0
+    },
+    {
+      "id": "15e.furnace",
+      "kind": "expect_fail",
+      "inner": {
+        "kind": "image_const",
+        "run": "gain",
+        "mask": {
+          "ids_in": [
+            "ball"
+          ],
+          "erode_px": 1
+        },
+        "expect": 1,
+        "target": "mean",
+        "tol": {
+          "value": 0.000002384185791015625,
+          "derivation": "as G08",
+          "source": "as G08"
+        }
+      }
+    },
+    {
+      "id": "15e.energy",
+      "kind": "validator_fails",
+      "run": "gain",
+      "name": "energy.image",
+      "exit_code": 5
+    }
+  ]
+}

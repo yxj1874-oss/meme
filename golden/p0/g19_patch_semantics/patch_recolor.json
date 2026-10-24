@@ -1,0 +1,11 @@
+[
+  {
+    "op": "replace",
+    "path": "/materials/m1/base_color",
+    "value": [
+      0.2,
+      0.2,
+      0.9
+    ]
+  }
+]

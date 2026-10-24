@@ -1,0 +1,34 @@
+{
+  "name": "meme",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AI-native deterministic rendering/physics runtime (scene JSON + patches in; images, state trajectories, metrics out)",
+  "type": "module",
+  "engines": {
+    "node": "24.22.0"
+  },
+  "bin": {
+    "meme": "src/cli.ts"
+  },
+  "scripts": {
+    "lint": "node tools/lint.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --test --test-reporter=spec \"test/**/*.test.ts\"",
+    "golden:check-generated": "node tools/gen_golden.ts --check",
+    "thresholds": "node tools/thresholds.ts --check",
+    "golden": "node src/cli.ts golden verify --require-hashes",
+    "determinism": "node src/cli.ts determinism-check golden/p0/g01_det_double_run/scene.json golden/p0/g03_det_plan_invariance/scene.json golden/p0/g16_physics_extremes/scene_far.json",
+    "perf": "node tools/perf.ts --check --require-baseline",
+    "mutants": "node tools/mutate.ts",
+    "ci": "npm run lint && npm run typecheck && npm test && npm run golden:check-generated && npm run thresholds && npm run golden && npm run determinism && npm run perf"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "webgpu": "0.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@webgpu/types": "0.1.74",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,40 @@
+# P0 gate. Every step runs inside the reference substrate (ci/Dockerfile via ci/run-in-ref.sh), the
+# same image used locally, so "local and CI produce identical PNGs" is checked by the golden hash
+# comparison itself (golden verify --require-hashes, MT4).
+name: p0
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  p0:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: ci/run-in-ref.sh npm ci --no-fund --no-audit
+
+      - name: Lint, types, unit tests, goldens, determinism, perf
+        run: ci/run-in-ref.sh npm run ci
+
+      - name: Mutation suite (MT2)
+        run: ci/run-in-ref.sh npm run mutants
+
+      - name: Minimal reproducing scenes for failing goldens
+        if: failure()
+        run: ci/run-in-ref.sh node src/cli.ts reduce --all-failing
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p0-failure-artifacts
+          path: |
+            out/golden
+            out/reduce
+            out/determinism
+            out/mutants/report.json
+          if-no-files-found: ignore

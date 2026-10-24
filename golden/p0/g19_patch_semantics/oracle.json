@@ -1,0 +1,225 @@
+{
+  "id": "g19_patch_semantics",
+  "title": "RFC 6902 patches: incremental equals direct, rejections are atomic and exact, render-only patches leave physics untouched",
+  "covers": [
+    "contract.patch"
+  ],
+  "kills": [
+    "patch-in-place",
+    "patch-no-revalidation",
+    "pointer-by-index"
+  ],
+  "runs": [
+    {
+      "name": "base",
+      "scene": "base.json"
+    },
+    {
+      "name": "patched",
+      "scene": "base.json",
+      "patches": [
+        "patch_edit.json"
+      ]
+    },
+    {
+      "name": "direct",
+      "scene": "direct.json"
+    },
+    {
+      "name": "recolored",
+      "scene": "base.json",
+      "patches": [
+        "patch_recolor.json"
+      ]
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.hash",
+      "kind": "scene_hash_equal",
+      "runs": [
+        "patched",
+        "direct"
+      ]
+    },
+    {
+      "id": "A1.bytes",
+      "kind": "outputs_equal",
+      "runs": [
+        "patched",
+        "direct"
+      ]
+    },
+    {
+      "id": "A2-A3",
+      "kind": "patch_rejects",
+      "base": "base.json",
+      "cases": [
+        {
+          "name": "dangling-ref",
+          "ops": [
+            {
+              "op": "move",
+              "from": "/materials/m1",
+              "path": "/materials/m9"
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_INVALID_RESULT",
+            "path": "/objects/ball_a/material",
+            "cause": [
+              "E_REF_MISSING@/objects/ball_a/material"
+            ]
+          }
+        },
+        {
+          "name": "test-fails",
+          "ops": [
+            {
+              "op": "test",
+              "path": "/seed",
+              "value": 2
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_TEST_FAILED",
+            "path": "/seed",
+            "op_index": 0
+          }
+        },
+        {
+          "name": "out-of-range",
+          "ops": [
+            {
+              "op": "replace",
+              "path": "/materials/m1/base_color/0",
+              "value": 1.5
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_INVALID_RESULT",
+            "path": "/materials/m1/base_color/0",
+            "cause": [
+              "E_RANGE@/materials/m1/base_color/0"
+            ]
+          }
+        },
+        {
+          "name": "version",
+          "ops": [
+            {
+              "op": "replace",
+              "path": "/v",
+              "value": 2
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_FORBIDDEN_PATH",
+            "path": "/v",
+            "op_index": 0
+          }
+        },
+        {
+          "name": "whole-scene",
+          "ops": [
+            {
+              "op": "replace",
+              "path": "",
+              "value": {}
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_FORBIDDEN_PATH",
+            "path": "",
+            "op_index": 0
+          }
+        },
+        {
+          "name": "missing-id",
+          "ops": [
+            {
+              "op": "remove",
+              "path": "/objects/nope"
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_PATH_NOT_FOUND",
+            "path": "/objects/nope",
+            "op_index": 0
+          }
+        },
+        {
+          "name": "atomic-5th-fails",
+          "ops": [
+            {
+              "op": "replace",
+              "path": "/seed",
+              "value": 9
+            },
+            {
+              "op": "remove",
+              "path": "/objects/ball_b"
+            },
+            {
+              "op": "add",
+              "path": "/materials/m3",
+              "value": {
+                "base_color": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "op": "replace",
+              "path": "/objects/ball_a/radius_m",
+              "value": 0.3
+            },
+            {
+              "op": "test",
+              "path": "/seed",
+              "value": 1
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_TEST_FAILED",
+            "path": "/seed",
+            "op_index": 4
+          }
+        },
+        {
+          "name": "base-mismatch",
+          "base_scene_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "ops": [
+            {
+              "op": "remove",
+              "path": "/seed"
+            }
+          ],
+          "expect": {
+            "code": "E_PATCH_BASE_MISMATCH",
+            "path": "/base_scene_hash"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "kind": "files_equal",
+      "runs": [
+        "base",
+        "recolored"
+      ],
+      "prefix": "state/"
+    },
+    {
+      "id": "A5",
+      "kind": "json_patch_conformance",
+      "files": [
+        "test/vendor/json-patch-tests/tests.json",
+        "test/vendor/json-patch-tests/spec_tests.json"
+      ]
+    }
+  ]
+}

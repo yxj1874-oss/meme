@@ -1,0 +1,114 @@
+{
+  "id": "g16_physics_extremes",
+  "title": "Far from the origin, huge speed, tiny dt, extreme masses: finite, closed form, mass-independent",
+  "covers": [
+    "numeric.nan",
+    "numeric.ke_bounded",
+    "analytic.physics"
+  ],
+  "kills": [
+    "f32-world-position",
+    "subtractive-velocity",
+    "mass-in-integrator"
+  ],
+  "runs": [
+    {
+      "name": "far",
+      "scene": "scene_far.json"
+    },
+    {
+      "name": "fast",
+      "scene": "scene_fast.json"
+    },
+    {
+      "name": "small_dt",
+      "scene": "scene_small_dt.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.far",
+      "kind": "validators_pass",
+      "run": "far"
+    },
+    {
+      "id": "A2-A3.far",
+      "kind": "traj_closed_form",
+      "run": "far",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A4.far",
+      "kind": "ke_bounded",
+      "run": "far",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A1.fast",
+      "kind": "validators_pass",
+      "run": "fast"
+    },
+    {
+      "id": "A2-A3.fast",
+      "kind": "traj_closed_form",
+      "run": "fast",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A4.fast",
+      "kind": "ke_bounded",
+      "run": "fast",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A1.small_dt",
+      "kind": "validators_pass",
+      "run": "small_dt"
+    },
+    {
+      "id": "A2-A3.small_dt",
+      "kind": "traj_closed_form",
+      "run": "small_dt",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A4.small_dt",
+      "kind": "ke_bounded",
+      "run": "small_dt",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A5",
+      "kind": "traj_bits_equal",
+      "run": "far",
+      "bodies": [
+        "b_light",
+        "b_light_twin"
+      ]
+    }
+  ]
+}

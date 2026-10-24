@@ -1,0 +1,55 @@
+{
+  "id": "g13_grazing_degenerate_rays",
+  "title": "Rays inside a plane (0/0), tangent rays, grazing hits: finite and bounded",
+  "covers": [
+    "numeric.nan",
+    "energy"
+  ],
+  "kills": [
+    "no-parallel-guard",
+    "negative-discriminant-sqrt"
+  ],
+  "runs": [
+    {
+      "name": "on_plane",
+      "scene": "scene_on_plane.json"
+    },
+    {
+      "name": "grazing",
+      "scene": "scene_grazing.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1-A2.on_plane",
+      "kind": "validators_pass",
+      "run": "on_plane"
+    },
+    {
+      "id": "A4.on_plane",
+      "kind": "ids_valid",
+      "run": "on_plane"
+    },
+    {
+      "id": "A1-A2.grazing",
+      "kind": "validators_pass",
+      "run": "grazing"
+    },
+    {
+      "id": "A4.grazing",
+      "kind": "ids_valid",
+      "run": "grazing"
+    },
+    {
+      "id": "A3",
+      "kind": "ids_row_in",
+      "run": "on_plane",
+      "row": 32,
+      "x_max": 32,
+      "allowed": [
+        "NONE",
+        "tangent"
+      ]
+    }
+  ]
+}

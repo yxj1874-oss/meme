@@ -1,0 +1,207 @@
+{
+  "g01_det_double_run/A1-A3": {
+    "value": 0,
+    "derivation": "bit-exact",
+    "source": "determinism contract"
+  },
+  "g04_rng_kat_crosscheck/A2-A4": {
+    "value": 0,
+    "derivation": "bit-exact",
+    "source": "WGSL §6.2.3: integer ops wrap modulo 2^32 exactly; u>>8 < 2^24 converts exactly"
+  },
+  "g05_rng_stream_quality/A1-A5": {
+    "value": null,
+    "derivation": "chi-square p in [1e-4, 1-1e-4]; |r| <= 4/sqrt(n); bit-flip share within 5 sigma of Binomial(N, 1/2) (Bonferroni over 32 or 128 tests)",
+    "source": "null distributions; Bonferroni"
+  },
+  "g06_empty_black/A1": {
+    "value": 0,
+    "derivation": "exact: every sample is 0",
+    "source": "construction"
+  },
+  "g06_empty_black/A2": {
+    "value": 0,
+    "derivation": "exact",
+    "source": "construction"
+  },
+  "g07_env_constant_exact/A1": {
+    "value": 0,
+    "derivation": "exact: samples are 1.0, a sum of 48 ones is exact in f32, mean f32(48/48) on the CPU",
+    "source": "WGSL §15.7.4 (correct rounding of a representable result is exact)"
+  },
+  "g07_env_constant_exact/A2": {
+    "value": 0,
+    "derivation": "exact",
+    "source": "as A1"
+  },
+  "g07_env_constant_exact/A3": {
+    "value": 0.0000021457672119140625,
+    "derivation": "(spp + 2) * u relative: one f32 rounding of L/Y(color), spp-1 additions, one luminance dot product",
+    "source": "photometric contract D6-A: radiance = L * color / Y(color), Y = BT.709 luma; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g08_furnace_convex/A1": {
+    "value": 0.000002384185791015625,
+    "derivation": "(spp-1 + 5*D) * u, spp = 16, D = 1",
+    "source": "Higham 2002 §4.2 recursive summation; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g08_furnace_convex/A2": {
+    "value": 0,
+    "derivation": "exact: escaping rays return 1.0",
+    "source": "as G07"
+  },
+  "g08_furnace_convex/A1b": {
+    "value": 0.0000011920928955078125,
+    "derivation": "0.5 * tau",
+    "source": "as A1"
+  },
+  "g09_furnace_enclosure_series/A1.D0": {
+    "value": 0.000002384185791015625,
+    "derivation": "(spp-1 + 5*(D+1)) * u, spp = 16, D = 0",
+    "source": "geometric series; Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g09_furnace_enclosure_series/A1.D1": {
+    "value": 0.0000029802322387695312,
+    "derivation": "(spp-1 + 5*(D+1)) * u, spp = 16, D = 1",
+    "source": "geometric series; Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g09_furnace_enclosure_series/A1.D8": {
+    "value": 0.000007152557373046875,
+    "derivation": "(spp-1 + 5*(D+1)) * u, spp = 16, D = 8",
+    "source": "geometric series; Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g10_tilted_plane_split_sky/A1": {
+    "value": null,
+    "derivation": "|mean - mu| <= 4 sigma_X / sqrt(P N)",
+    "source": "isotropic sky view factor (1+cos b)/2, Duffie & Beckman; CLT"
+  },
+  "g10_tilted_plane_split_sky/A2": {
+    "value": 0.01,
+    "derivation": "relative sd of pooled s^2 = sqrt((kappa-1)/(P N)) = 2.26e-3, kappa = 2.33 (Bernoulli); 0.01 ~ 4.4 sd",
+    "source": "sampling distribution of the variance"
+  },
+  "g11_mc_convergence_slope/A1-A2": {
+    "value": 0.05,
+    "derivation": "slope sd = 0.022 / sqrt(sum (x_i - xbar)^2) = 3.8e-3 (13 sd); RMSE relative sd <= 2.2% with P = 1024 (calibration 10% ~ 4.5 sd)",
+    "source": "OLS slope variance"
+  },
+  "g12_bsdf_probe_lambert/A1-A7.0": {
+    "value": null,
+    "derivation": "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4",
+    "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"
+  },
+  "g12_bsdf_probe_lambert/A1-A7.1": {
+    "value": null,
+    "derivation": "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4",
+    "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"
+  },
+  "g14_scale_extremes_furnace/A1.tiny": {
+    "value": 0.000002384185791015625,
+    "derivation": "as G08",
+    "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g14_scale_extremes_furnace/A2.tiny": {
+    "value": 0,
+    "derivation": "exact",
+    "source": "as G07"
+  },
+  "g14_scale_extremes_furnace/A1.huge": {
+    "value": 0.000002384185791015625,
+    "derivation": "as G08",
+    "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g14_scale_extremes_furnace/A2.huge": {
+    "value": 0,
+    "derivation": "exact",
+    "source": "as G07"
+  },
+  "g14_scale_extremes_furnace/A1.mixed": {
+    "value": 0.000002384185791015625,
+    "derivation": "as G08",
+    "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g14_scale_extremes_furnace/A1.far": {
+    "value": 0.000002384185791015625,
+    "derivation": "as G08",
+    "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g14_scale_extremes_furnace/A2.far": {
+    "value": 0,
+    "derivation": "exact",
+    "source": "as G07"
+  },
+  "g15_validator_negative_controls/15e.furnace:inner": {
+    "value": 0.000002384185791015625,
+    "derivation": "as G08",
+    "source": "as G08"
+  },
+  "g16_physics_extremes/A2-A3.far": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g16_physics_extremes/A4.far": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g16_physics_extremes/A2-A3.fast": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g16_physics_extremes/A4.fast": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g16_physics_extremes/A2-A3.small_dt": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g16_physics_extremes/A4.small_dt": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g17_free_fall_analytic/A1.dt": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g17_free_fall_analytic/A1.dt2": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g17_free_fall_analytic/A2.dt": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g17_free_fall_analytic/A2.dt2": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g17_free_fall_analytic/A3": {
+    "value": 0.04,
+    "derivation": "e(dt) = 0.15328 +- 4.92e-4, e(dt/2) = 0.07664 +- 9.80e-4 -> ratio in [1.968, 2.032]",
+    "source": "A1 tolerances"
+  },
+  "g18_projectile_energy_drift/A1": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g18_projectile_energy_drift/A2": {
+    "value": null,
+    "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+    "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g20_schema_contract_corpus/A4": {
+    "value": 0,
+    "derivation": "zero crashes; every failure is a structured ContractViolation",
+    "source": "contract"
+  }
+}

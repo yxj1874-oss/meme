@@ -1,0 +1,113 @@
+{
+    "materials" :	{
+        "grey" :	{
+            "base_color" :	[ 0.5 ,  5e-1 ,  0.50000000000000000 ]
+        },
+        "lamp" :	{
+            "emissive_color" :	[ 1e+0 ,  0.90000000000000002 ,  7e-1 ],
+            "base_color" :	[ 0.1 ,  1e-1 ,  0.10000000000000001 ],
+            "emissive_cdm2" :	20e0
+        },
+        "floor" :	{
+            "base_color" :	[ 0.6 ,  0.59999999999999998 ,  0.6 ]
+        },
+        "red" :	{
+            "base_color" :	[ 0.80000000000000004 ,  2e-1 ,  0.20000000000000001 ]
+        },
+        "white" :	{
+            "base_color" :	[ 0.9 ,  0.9 ,  0.9 ]
+        },
+        "green" :	{
+            "base_color" :	[ 0.2 ,  0.80000000000000004 ,  0.3 ]
+        },
+        "blue" :	{
+            "base_color" :	[ 0.2 ,  0.3 ,  0.90000000000000002 ]
+        }
+    },
+    "v" :	1,
+    "seed" :	101,
+    "objects" :	{
+        "ball_c" :	{
+            "body" :	{
+                "mass_kg" :	2e+0,
+                "velocity_m_s" :	[ -0.29999999999999999 ,  0.1 ,  1.0 ]
+            },
+            "material" :	"blue",
+            "center_m" :	[ 1.6e+0 ,  -2e-1 ,  0.50000000000000000 ],
+            "shape" :	"sphere",
+            "radius_m" :	0.50000000000000000
+        },
+        "ball_e" :	{
+            "shape" :	"sphere",
+            "radius_m" :	2.5e-1,
+            "center_m" :	[ -4e-1 ,  -1.2e+0 ,  0.25000000000000000 ],
+            "material" :	"grey",
+            "body" :	{
+                "velocity_m_s" :	[ 0e+0 ,  0 ,  3e0 ],
+                "mass_kg" :	0.50000000000000000
+            }
+        },
+        "floor" :	{
+            "material" :	"floor",
+            "normal" :	[ 0.0 ,  0.0000000000000000 ,  1 ],
+            "shape" :	"plane",
+            "point_m" :	[ 0e0 ,  0.0 ,  0.0 ]
+        },
+        "ball_b" :	{
+            "radius_m" :	8e-1,
+            "material" :	"green",
+            "center_m" :	[ 0e+0 ,  0.50000000000000000 ,  0.8 ],
+            "shape" :	"sphere"
+        },
+        "ball_a" :	{
+            "body" :	{
+                "mass_kg" :	1,
+                "velocity_m_s" :	[ 0.50000000000000000 ,  0.0000000000000000 ,  2.0 ]
+            },
+            "center_m" :	[ -1.5e+0 ,  0.0000000000000000 ,  6e-1 ],
+            "shape" :	"sphere",
+            "radius_m" :	6e-1,
+            "material" :	"red"
+        },
+        "lamp" :	{
+            "shape" :	"sphere",
+            "material" :	"lamp",
+            "radius_m" :	0.40000000000000002,
+            "center_m" :	[ 5e-1 ,  1.5e+0 ,  2.6000000000000001 ]
+        },
+        "ball_d" :	{
+            "radius_m" :	3e-1,
+            "center_m" :	[ 0.6 ,  -1.4 ,  0.3 ],
+            "shape" :	"sphere",
+            "material" :	"white"
+        }
+    },
+    "camera" :	{
+        "up" :	[ 0 ,  0.0000000000000000 ,  1.0 ],
+        "vfov_rad" :	0.80000000000000004,
+        "model" :	"pinhole",
+        "position_m" :	[ 0.0 ,  -6 ,  2.5000000000000000 ],
+        "look_at_m" :	[ 0 ,  0.0 ,  0.8 ]
+    },
+    "environment" :	{
+        "color" :	[ 1e+0 ,  1.0 ,  1.0000000000000000 ],
+        "luminance_cdm2" :	0.5,
+        "type" :	"constant"
+    },
+    "render" :	{
+        "integrator" :	"pt_bsdf_p0",
+        "max_bounces" :	4.0,
+        "sampler" :	"independent",
+        "height_px" :	96.0,
+        "spp" :	64.000000000000000,
+        "display_white_cdm2" :	2,
+        "width_px" :	128.0
+    },
+    "physics" :	{
+        "gravity_m_s2" :	[ 0e0 ,  0.0 ,  -9.8100000000000005 ],
+        "record_every_steps" :	32e0,
+        "dt_s" :	0.0039062500000000000,
+        "integrator" :	"xpbd_unconstrained_p0",
+        "steps" :	256.00000000000000
+    }
+}

@@ -1,0 +1,81 @@
+{
+  "id": "g08_furnace_convex",
+  "title": "White furnace, one convex sphere, max_bounces = 1 (any self-intersection zeroes a sample)",
+  "covers": [
+    "energy.furnace"
+  ],
+  "kills": [
+    "no-ray-offset",
+    "albedo-weight",
+    "cosine-pdf"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    },
+    {
+      "name": "half",
+      "scene": "scene_half.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "(spp-1 + 5*D) * u, spp = 16, D = 1",
+        "source": "Higham 2002 §4.2 recursive summation; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "ids_none": true,
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact: escaping rays return 1.0",
+        "source": "as G07"
+      }
+    },
+    {
+      "id": "A1b",
+      "kind": "image_const",
+      "run": "half",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 0.5,
+      "target": "mean",
+      "tol": {
+        "value": 0.0000011920928955078125,
+        "derivation": "0.5 * tau",
+        "source": "as A1"
+      }
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "a"
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "id": "g14_scale_extremes_furnace",
+  "title": "White furnace at 1e-3 m, 1e3 m, a 1e6 size ratio in one scene, and on the E_PRECISION boundary",
+  "covers": [
+    "energy.furnace",
+    "numeric.scale"
+  ],
+  "kills": [
+    "fixed-epsilon-offset",
+    "naive-quadratic",
+    "camera-relative"
+  ],
+  "runs": [
+    {
+      "name": "tiny",
+      "scene": "scene_tiny.json"
+    },
+    {
+      "name": "huge",
+      "scene": "scene_huge.json"
+    },
+    {
+      "name": "mixed",
+      "scene": "scene_mixed.json"
+    },
+    {
+      "name": "far",
+      "scene": "scene_far.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.tiny",
+      "kind": "image_const",
+      "run": "tiny",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "min_pixels": 8,
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "as G08",
+        "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2.tiny",
+      "kind": "image_const",
+      "run": "tiny",
+      "mask": {
+        "ids_none": true,
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact",
+        "source": "as G07"
+      }
+    },
+    {
+      "id": "A1.huge",
+      "kind": "image_const",
+      "run": "huge",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "min_pixels": 8,
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "as G08",
+        "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2.huge",
+      "kind": "image_const",
+      "run": "huge",
+      "mask": {
+        "ids_none": true,
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact",
+        "source": "as G07"
+      }
+    },
+    {
+      "id": "A1.mixed",
+      "kind": "image_const",
+      "run": "mixed",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "min_pixels": 8,
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "as G08",
+        "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A1.far",
+      "kind": "image_const",
+      "run": "far",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "min_pixels": 8,
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "as G08",
+        "source": "Wächter & Binder 2019 (RTG ch. 6); Haines et al. 2019 (RTG ch. 7); u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2.far",
+      "kind": "image_const",
+      "run": "far",
+      "mask": {
+        "ids_none": true,
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact",
+        "source": "as G07"
+      }
+    }
+  ]
+}

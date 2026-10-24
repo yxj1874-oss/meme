@@ -1,0 +1,2 @@
+Vendored from https://github.com/json-patch/json-patch-tests at commit 2a928f9044aad35c74e2788d498bcf2c6b91adea (tests.json, spec_tests.json, README.md).
+Used as the external oracle for RFC 6902 conformance (golden G19 A5).

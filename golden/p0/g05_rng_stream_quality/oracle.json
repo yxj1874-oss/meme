@@ -1,0 +1,32 @@
+{
+  "id": "g05_rng_stream_quality",
+  "title": "Uniformity, stream independence and avalanche of the RNG",
+  "covers": [
+    "rng"
+  ],
+  "kills": [
+    "seed-not-in-key",
+    "dim-block-reuse"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1-A5",
+      "kind": "rng_quality",
+      "seed": 505,
+      "n": 1048576,
+      "p_range": [
+        0.0001,
+        0.9999
+      ],
+      "corr_k": 4,
+      "avalanche_k": 5,
+      "avalanche_counters": 65536,
+      "tol": {
+        "value": null,
+        "derivation": "chi-square p in [1e-4, 1-1e-4]; |r| <= 4/sqrt(n); bit-flip share within 5 sigma of Binomial(N, 1/2) (Bonferroni over 32 or 128 tests)",
+        "source": "null distributions; Bonferroni"
+      }
+    }
+  ]
+}

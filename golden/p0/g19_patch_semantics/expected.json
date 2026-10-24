@@ -1,0 +1,53 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "base": {
+      "aov.id.u32": "sha256:008e996159b5a106195b46effc6b53334bce3788ed7b75897fbd1b2a64febc53",
+      "aov.m2.pfm": "sha256:5db00ae8ea557630a2bd8f8a6cb964b022028bee0024be2cc9ec38aa72a207f7",
+      "image.linear.pfm": "sha256:b718076c4476e55928ee5b26cb74ef3a862c26955fc03829aecb000fe47b4027",
+      "image.png": "sha256:e65fbaf7ffeb7521c0d044f7ac409928e45d0a9d0e154eaafbfe255b308aa3a0",
+      "state/step_000000.bin": "sha256:be2522c81138e05a54ac05b0cab26ff5e80e3ee37849ddf9d00d0b570cea31bf",
+      "state/step_000000.json": "sha256:bd89a1d0f452ddeea456f2c6192327b89f52eaa3c1be1161736390891cc78bb2",
+      "state/step_000032.bin": "sha256:c4f8b589335779c49f35d670b69b967bab3b698833374428a09683cdabd5218a",
+      "state/step_000032.json": "sha256:51fe1a4d237ad1d01165caee1ad2d06927fbe398be2b9441b695341db1f736cc",
+      "state/step_000064.bin": "sha256:d58f2a452cc1bb7942eee7bfff80d0c2db58ce5b87cb229d2fc1e04a107ecfad",
+      "state/step_000064.json": "sha256:293a0c97df35cb7310d9c684b7ef476f844275c40f9af69776c4de154231d281"
+    },
+    "patched": {
+      "aov.id.u32": "sha256:a447099292828523d6ac50764971fdedf9c1698db982f5e9a9e3ca1cd7b59f20",
+      "aov.m2.pfm": "sha256:ba89f7f29a2692d35d0aa344be09a6da2becf59db67d0102bc4e3a588f89e889",
+      "image.linear.pfm": "sha256:ad350602ccfa3984c479a0bbffd65e1659405499db8b2213d42b55a494145f25",
+      "image.png": "sha256:c4b8e90ac25ce72d4866c2cbb6804ec407cc622870108e8d318a0848a158c268",
+      "state/step_000000.bin": "sha256:7b18057ada4e43b0b4cc07356d5051faf405941b0e32dadc506cf56791f72636",
+      "state/step_000000.json": "sha256:d92e67ba315033b47a4d6af8c2678b5005d4a9b1ce27aaa5fdd1bf6140f983ae",
+      "state/step_000032.bin": "sha256:0a1a23f85087bdd82796ff3827160005540e8943c1a7ddf66686626f35f8f2e8",
+      "state/step_000032.json": "sha256:88f2f1b991e1244ffcdfefa4cacc7e9c3c0db89752b6f3760fa6491689c4570d",
+      "state/step_000064.bin": "sha256:56ba69dc81ecbf098d200113edfdf8a5c0f6ab6fb38f6231b6fad14688e6da44",
+      "state/step_000064.json": "sha256:0cde79f605014408d2bbfbdb6d8da3a5aca186ab1aa43a293eacb0dde07b16bb"
+    },
+    "direct": {
+      "aov.id.u32": "sha256:a447099292828523d6ac50764971fdedf9c1698db982f5e9a9e3ca1cd7b59f20",
+      "aov.m2.pfm": "sha256:ba89f7f29a2692d35d0aa344be09a6da2becf59db67d0102bc4e3a588f89e889",
+      "image.linear.pfm": "sha256:ad350602ccfa3984c479a0bbffd65e1659405499db8b2213d42b55a494145f25",
+      "image.png": "sha256:c4b8e90ac25ce72d4866c2cbb6804ec407cc622870108e8d318a0848a158c268",
+      "state/step_000000.bin": "sha256:7b18057ada4e43b0b4cc07356d5051faf405941b0e32dadc506cf56791f72636",
+      "state/step_000000.json": "sha256:d92e67ba315033b47a4d6af8c2678b5005d4a9b1ce27aaa5fdd1bf6140f983ae",
+      "state/step_000032.bin": "sha256:0a1a23f85087bdd82796ff3827160005540e8943c1a7ddf66686626f35f8f2e8",
+      "state/step_000032.json": "sha256:88f2f1b991e1244ffcdfefa4cacc7e9c3c0db89752b6f3760fa6491689c4570d",
+      "state/step_000064.bin": "sha256:56ba69dc81ecbf098d200113edfdf8a5c0f6ab6fb38f6231b6fad14688e6da44",
+      "state/step_000064.json": "sha256:0cde79f605014408d2bbfbdb6d8da3a5aca186ab1aa43a293eacb0dde07b16bb"
+    },
+    "recolored": {
+      "aov.id.u32": "sha256:008e996159b5a106195b46effc6b53334bce3788ed7b75897fbd1b2a64febc53",
+      "aov.m2.pfm": "sha256:0f63afb4c5c1a67ebc2ff1907e722b4ba9f2218a81ac50223f64453e42ae53f0",
+      "image.linear.pfm": "sha256:88c21c141ae2aa4a1a57759dd62059ac8c04992ab70ca3a287c9e6994f5e4442",
+      "image.png": "sha256:f82c856a4b0f9513a097774c275779e05f53b76f90f55413ca6c19a71a2eba47",
+      "state/step_000000.bin": "sha256:be2522c81138e05a54ac05b0cab26ff5e80e3ee37849ddf9d00d0b570cea31bf",
+      "state/step_000000.json": "sha256:bd89a1d0f452ddeea456f2c6192327b89f52eaa3c1be1161736390891cc78bb2",
+      "state/step_000032.bin": "sha256:c4f8b589335779c49f35d670b69b967bab3b698833374428a09683cdabd5218a",
+      "state/step_000032.json": "sha256:51fe1a4d237ad1d01165caee1ad2d06927fbe398be2b9441b695341db1f736cc",
+      "state/step_000064.bin": "sha256:d58f2a452cc1bb7942eee7bfff80d0c2db58ce5b87cb229d2fc1e04a107ecfad",
+      "state/step_000064.json": "sha256:293a0c97df35cb7310d9c684b7ef476f844275c40f9af69776c4de154231d281"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "g12_bsdf_probe_lambert",
+  "title": "Lambert BSDF: albedo, energy <= 1, pdf normalization, sampler consistency, reciprocity, support, chi-square",
+  "covers": [
+    "energy.bsdf",
+    "reciprocity"
+  ],
+  "kills": [
+    "pdf-missing-pi",
+    "abs-cos-misplaced",
+    "hemisphere-flip"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1-A7.0",
+      "kind": "bsdf_probe",
+      "seed": 1212,
+      "albedo": [
+        0.8,
+        0.5,
+        0.2
+      ],
+      "directions": 256,
+      "blocks": 256,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4",
+        "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"
+      }
+    },
+    {
+      "id": "A1-A7.1",
+      "kind": "bsdf_probe",
+      "seed": 1213,
+      "albedo": [
+        1,
+        1,
+        1
+      ],
+      "directions": 256,
+      "blocks": 256,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4",
+        "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"
+      }
+    }
+  ]
+}

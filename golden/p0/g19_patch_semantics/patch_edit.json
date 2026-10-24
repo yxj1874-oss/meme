@@ -1,0 +1,33 @@
+[
+  {
+    "op": "replace",
+    "path": "/objects/ball_a/radius_m",
+    "value": 0.25
+  },
+  {
+    "op": "add",
+    "path": "/objects/ball_new",
+    "value": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        1,
+        1
+      ],
+      "radius_m": 0.4,
+      "material": "m1",
+      "body": {
+        "mass_kg": 0.5,
+        "velocity_m_s": [
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  },
+  {
+    "op": "remove",
+    "path": "/objects/ball_b"
+  }
+]

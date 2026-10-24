@@ -1,0 +1,17 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "a": {
+      "aov.id.u32": "sha256:cccfd97955423c6e06b230f789e661b48ea19dd655a8c684d9fbe7768e979eab",
+      "aov.m2.pfm": "sha256:5c2fb5dacd093a6653bb4b1589bf934257d779d61e65d51d2fc4a5d9def1e1bb",
+      "image.linear.pfm": "sha256:5c2fb5dacd093a6653bb4b1589bf934257d779d61e65d51d2fc4a5d9def1e1bb",
+      "image.png": "sha256:ef267af87a50de005c3b39b6367a231ea16174471fbaf35c848e12b269c7a6d8"
+    },
+    "half": {
+      "aov.id.u32": "sha256:cccfd97955423c6e06b230f789e661b48ea19dd655a8c684d9fbe7768e979eab",
+      "aov.m2.pfm": "sha256:2e3f3ca76eb2b0fe25998869008e6ed94cc43d4ad87ad52e4798a17ac86f0bfd",
+      "image.linear.pfm": "sha256:e5bde6d6115bc0ece56fa7ce7dc9be7460e4b83de425312eab21e59447b507ed",
+      "image.png": "sha256:c96175ddcbbefcdc92e9545295feb7c213e3ea18c5cf745480c84437860bba72"
+    }
+  }
+}

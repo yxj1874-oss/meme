@@ -1,0 +1,74 @@
+{
+  "id": "g07_env_constant_exact",
+  "title": "Constant environment, no objects, spp = 48: every pixel is exactly 1.0",
+  "covers": [
+    "energy",
+    "analytic.render"
+  ],
+  "kills": [
+    "luminance-normalization",
+    "dropped-sample",
+    "gpu-division"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    },
+    {
+      "name": "red",
+      "scene": "scene_red.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "all": true
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact: samples are 1.0, a sum of 48 ones is exact in f32, mean f32(48/48) on the CPU",
+        "source": "WGSL §15.7.4 (correct rounding of a representable result is exact)"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "all": true
+      },
+      "expect": 1,
+      "target": "m2",
+      "tol": {
+        "value": 0,
+        "derivation": "exact",
+        "source": "as A1"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "image_luminance",
+      "run": "red",
+      "mask": {
+        "all": true
+      },
+      "expect": 1,
+      "rgb": [
+        4.703668861712135,
+        0,
+        0
+      ],
+      "tol": {
+        "value": 0.0000021457672119140625,
+        "derivation": "(spp + 2) * u relative: one f32 rounding of L/Y(color), spp-1 additions, one luminance dot product",
+        "source": "photometric contract D6-A: radiance = L * color / Y(color), Y = BT.709 luma; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    }
+  ]
+}

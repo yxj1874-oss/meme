@@ -1,0 +1,66 @@
+{
+  "id": "g06_empty_black",
+  "title": "No light, no objects: every pixel is exactly zero",
+  "covers": [
+    "energy"
+  ],
+  "kills": [
+    "accum-not-cleared",
+    "emission-leak",
+    "aov-uninitialized"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "all": true
+      },
+      "expect": 0,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact: every sample is 0",
+        "source": "construction"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "all": true
+      },
+      "expect": 0,
+      "target": "m2",
+      "tol": {
+        "value": 0,
+        "derivation": "exact",
+        "source": "construction"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "png_all",
+      "run": "a",
+      "rgb": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "A4",
+      "kind": "ids_all",
+      "run": "a",
+      "value": "NONE"
+    }
+  ]
+}

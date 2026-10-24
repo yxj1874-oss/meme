@@ -1,0 +1,77 @@
+{
+  "id": "g10_tilted_plane_split_sky",
+  "title": "Tilted Lambert plane under a split sky: mean = rho (1 + cos theta) / 2",
+  "covers": [
+    "analytic.render"
+  ],
+  "kills": [
+    "uniform-sampling-cosine-weight",
+    "dimension-correlation",
+    "split-env-inverted"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "image_mean_ksigma",
+      "run": "a",
+      "mask": {
+        "ids_in": [
+          "slab"
+        ]
+      },
+      "expect": {
+        "fn": "split_sky_tilted_plane",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "sigma": {
+        "fn": "split_sky_sigma",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "k": 4,
+      "tol": {
+        "value": null,
+        "derivation": "|mean - mu| <= 4 sigma_X / sqrt(P N)",
+        "source": "isotropic sky view factor (1+cos b)/2, Duffie & Beckman; CLT"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "variance_ratio",
+      "run": "a",
+      "mask": {
+        "ids_in": [
+          "slab"
+        ]
+      },
+      "sigma": {
+        "fn": "split_sky_sigma",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "tol": {
+        "value": 0.01,
+        "derivation": "relative sd of pooled s^2 = sqrt((kappa-1)/(P N)) = 2.26e-3, kappa = 2.33 (Bernoulli); 0.01 ~ 4.4 sd",
+        "source": "sampling distribution of the variance"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "channels_equal",
+      "run": "a"
+    }
+  ]
+}

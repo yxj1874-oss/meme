@@ -1,0 +1,73 @@
+{
+  "v": 1,
+  "seed": 2020,
+  "physics": {
+    "integrator": "xpbd_unconstrained_p0",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.01,
+    "steps": 10,
+    "record_every_steps": 5
+  },
+  "materials": {
+    "m": {
+      "base_color": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "objects": {
+    "a": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        1
+      ],
+      "radius_m": 1,
+      "material": "m"
+    }
+  },
+  "camera": {
+    "model": "pinhole",
+    "position_m": [
+      0,
+      -4,
+      1
+    ],
+    "look_at_m": [
+      0,
+      0,
+      1
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "vfov_rad": 0.6
+  },
+  "environment": {
+    "type": "constant",
+    "luminance_cdm2": 1,
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
+  "render": {
+    "width_px": 16,
+    "height_px": 16,
+    "spp": 1,
+    "max_bounces": 1,
+    "sampler": "independent",
+    "integrator": "pt_bsdf_p0",
+    "display_white_cdm2": 1
+  }
+}

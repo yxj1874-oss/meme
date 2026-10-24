@@ -1,0 +1,374 @@
+{
+  "id": "g20_schema_contract_corpus",
+  "title": "Schema lint, every golden scene accepted, 37 invalid scenes rejected with exact code and path, fuzzed scenes never crash",
+  "covers": [
+    "contract.schema"
+  ],
+  "kills": [
+    "no-duplicate-key-check",
+    "no-precision-check",
+    "error-code-mapping"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "schema_lint"
+    },
+    {
+      "id": "A2",
+      "kind": "golden_scenes_valid",
+      "glob": "golden/p0/*/scene*.json"
+    },
+    {
+      "id": "A3",
+      "kind": "reject_corpus",
+      "cases": [
+        {
+          "file": "invalid/radius_zero.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/objects/a/radius_m"
+            }
+          ]
+        },
+        {
+          "file": "invalid/albedo_over_one.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/materials/m/base_color/0"
+            }
+          ]
+        },
+        {
+          "file": "invalid/dt_zero.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/physics/dt_s"
+            }
+          ]
+        },
+        {
+          "file": "invalid/spp_zero.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/render/spp"
+            }
+          ]
+        },
+        {
+          "file": "invalid/spp_fraction.json",
+          "expect": [
+            {
+              "code": "E_TYPE",
+              "path": "/render/spp"
+            }
+          ]
+        },
+        {
+          "file": "invalid/radius_string.json",
+          "expect": [
+            {
+              "code": "E_TYPE",
+              "path": "/objects/a/radius_m"
+            }
+          ]
+        },
+        {
+          "file": "invalid/typo_property.json",
+          "expect": [
+            {
+              "code": "E_UNKNOWN_PROPERTY",
+              "path": "/objects/a"
+            }
+          ]
+        },
+        {
+          "file": "invalid/missing_material.json",
+          "expect": [
+            {
+              "code": "E_REQUIRED",
+              "path": "/objects/a"
+            }
+          ]
+        },
+        {
+          "file": "invalid/radius_1e999.json",
+          "expect": [
+            {
+              "code": "E_NONFINITE",
+              "path": "/objects/a/radius_m"
+            }
+          ]
+        },
+        {
+          "file": "invalid/coord_minus_1e999.json",
+          "expect": [
+            {
+              "code": "E_NONFINITE",
+              "path": "/objects/a/center_m/0"
+            }
+          ]
+        },
+        {
+          "file": "invalid/duplicate_key.json",
+          "expect": [
+            {
+              "code": "E_DUPLICATE_KEY",
+              "path": "/objects/a/radius_m"
+            }
+          ]
+        },
+        {
+          "file": "invalid/id_uppercase.json",
+          "expect": [
+            {
+              "code": "E_PATTERN",
+              "path": "/objects"
+            }
+          ]
+        },
+        {
+          "file": "invalid/id_slash.json",
+          "expect": [
+            {
+              "code": "E_PATTERN",
+              "path": "/objects"
+            }
+          ]
+        },
+        {
+          "file": "invalid/id_too_long.json",
+          "expect": [
+            {
+              "code": "E_PATTERN",
+              "path": "/objects"
+            }
+          ]
+        },
+        {
+          "file": "invalid/dangling_material.json",
+          "expect": [
+            {
+              "code": "E_REF_MISSING",
+              "path": "/objects/a/material"
+            }
+          ]
+        },
+        {
+          "file": "invalid/camera_at_target.json",
+          "expect": [
+            {
+              "code": "E_CAMERA_DEGENERATE",
+              "path": "/camera"
+            }
+          ]
+        },
+        {
+          "file": "invalid/camera_up_parallel.json",
+          "expect": [
+            {
+              "code": "E_CAMERA_DEGENERATE",
+              "path": "/camera"
+            }
+          ]
+        },
+        {
+          "file": "invalid/plane_zero_normal.json",
+          "expect": [
+            {
+              "code": "E_ZERO_VECTOR",
+              "path": "/objects/p/normal"
+            }
+          ]
+        },
+        {
+          "file": "invalid/env_up_tiny.json",
+          "expect": [
+            {
+              "code": "E_ZERO_VECTOR",
+              "path": "/environment/up"
+            }
+          ]
+        },
+        {
+          "file": "invalid/precision_tiny_far.json",
+          "expect": [
+            {
+              "code": "E_PRECISION",
+              "path": "/objects/a"
+            }
+          ]
+        },
+        {
+          "file": "invalid/emissive_black.json",
+          "expect": [
+            {
+              "code": "E_COLOR_LUMINANCE",
+              "path": "/materials/m"
+            }
+          ]
+        },
+        {
+          "file": "invalid/env_black_color.json",
+          "expect": [
+            {
+              "code": "E_COLOR_LUMINANCE",
+              "path": "/environment"
+            }
+          ]
+        },
+        {
+          "file": "invalid/render_budget.json",
+          "expect": [
+            {
+              "code": "E_BUDGET",
+              "path": "/render"
+            }
+          ]
+        },
+        {
+          "file": "invalid/id_hash_collision.json",
+          "expect": [
+            {
+              "code": "E_ID_HASH_COLLISION",
+              "path": "/objects"
+            }
+          ]
+        },
+        {
+          "file": "invalid/version_2.json",
+          "expect": [
+            {
+              "code": "E_ENUM",
+              "path": "/v"
+            }
+          ]
+        },
+        {
+          "file": "invalid/seed_negative.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/seed"
+            }
+          ]
+        },
+        {
+          "file": "invalid/seed_2_32.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/seed"
+            }
+          ]
+        },
+        {
+          "file": "invalid/render_without_camera.json",
+          "expect": [
+            {
+              "code": "E_RENDER_REQUIRES",
+              "path": ""
+            }
+          ]
+        },
+        {
+          "file": "invalid/empty_run.json",
+          "expect": [
+            {
+              "code": "E_EMPTY_RUN",
+              "path": ""
+            }
+          ]
+        },
+        {
+          "file": "invalid/plane_with_body.json",
+          "expect": [
+            {
+              "code": "E_UNKNOWN_PROPERTY",
+              "path": "/objects/p"
+            }
+          ]
+        },
+        {
+          "file": "invalid/shape_cube.json",
+          "expect": [
+            {
+              "code": "E_VARIANT",
+              "path": "/objects/a/shape"
+            }
+          ]
+        },
+        {
+          "file": "invalid/fast_with_gravity.json",
+          "expect": [
+            {
+              "code": "E_PRECISION_DT",
+              "path": "/objects/b/body"
+            }
+          ]
+        },
+        {
+          "file": "invalid/center_two_components.json",
+          "expect": [
+            {
+              "code": "E_ARITY",
+              "path": "/objects/a/center_m"
+            }
+          ]
+        },
+        {
+          "file": "invalid/too_many_objects.json",
+          "expect": [
+            {
+              "code": "E_TOO_MANY",
+              "path": "/objects"
+            }
+          ]
+        },
+        {
+          "file": "invalid/nan_literal.json",
+          "expect": [
+            {
+              "code": "E_JSON_SYNTAX",
+              "path": ""
+            }
+          ]
+        },
+        {
+          "file": "invalid/meta_control_char.json",
+          "expect": [
+            {
+              "code": "E_PATTERN",
+              "path": "/meta/name"
+            }
+          ]
+        },
+        {
+          "file": "invalid/proto_key.json",
+          "expect": [
+            {
+              "code": "E_UNKNOWN_PROPERTY",
+              "path": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "kind": "schema_fuzz",
+      "seed": 2020,
+      "n": 10000,
+      "tol": {
+        "value": 0,
+        "derivation": "zero crashes; every failure is a structured ContractViolation",
+        "source": "contract"
+      }
+    }
+  ]
+}

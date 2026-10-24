@@ -1,0 +1,127 @@
+{
+  "id": "g03_det_plan_invariance",
+  "title": "Pass split, tile size, tile order and dispatch batching do not change any output byte",
+  "covers": [
+    "determinism"
+  ],
+  "kills": [
+    "pass-local-sum",
+    "cross-tile-race",
+    "dispatch-dependent-state"
+  ],
+  "runs": [
+    {
+      "name": "p1",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 64,
+        "tile_px": 128,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 256
+      }
+    },
+    {
+      "name": "p2",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 16,
+        "tile_px": 16,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 32
+      }
+    },
+    {
+      "name": "p3",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1,
+        "tile_px": 8,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1
+      }
+    },
+    {
+      "name": "p4",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 16,
+        "tile_px": 16,
+        "tile_order": [
+          19,
+          36,
+          39,
+          25,
+          30,
+          34,
+          23,
+          9,
+          46,
+          21,
+          28,
+          2,
+          40,
+          38,
+          43,
+          29,
+          44,
+          16,
+          12,
+          1,
+          45,
+          0,
+          4,
+          41,
+          47,
+          26,
+          14,
+          5,
+          13,
+          22,
+          8,
+          20,
+          33,
+          37,
+          31,
+          7,
+          15,
+          3,
+          32,
+          18,
+          27,
+          11,
+          24,
+          6,
+          35,
+          17,
+          42,
+          10
+        ],
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 7
+      }
+    },
+    {
+      "name": "p5",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 64,
+        "tile_px": 16,
+        "submit_batches": 7,
+        "physics_steps_per_dispatch": 5
+      }
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "outputs_equal",
+      "runs": [
+        "p1",
+        "p2",
+        "p3",
+        "p4",
+        "p5"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "id": "g09_furnace_enclosure_series",
+  "title": "Camera inside an emitting Lambert sphere: L_D = Le (1 - rho^(D+1)) / (1 - rho), zero variance",
+  "covers": [
+    "energy.furnace",
+    "analytic.render"
+  ],
+  "kills": [
+    "first-hit-emission",
+    "bounce-off-by-one",
+    "inside-root",
+    "double-emission"
+  ],
+  "runs": [
+    {
+      "name": "d0",
+      "scene": "scene_d0.json"
+    },
+    {
+      "name": "d1",
+      "scene": "scene_d1.json"
+    },
+    {
+      "name": "d8",
+      "scene": "scene_d8.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.D0",
+      "kind": "image_const",
+      "run": "d0",
+      "mask": {
+        "all": true
+      },
+      "expect": {
+        "fn": "enclosure_series",
+        "args": {
+          "le": 1,
+          "rho": 0.75,
+          "max_bounces": 0
+        }
+      },
+      "target": "mean",
+      "relative": true,
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "(spp-1 + 5*(D+1)) * u, spp = 16, D = 0",
+        "source": "geometric series; Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "V.D0",
+      "kind": "validators_pass",
+      "run": "d0"
+    },
+    {
+      "id": "A1.D1",
+      "kind": "image_const",
+      "run": "d1",
+      "mask": {
+        "all": true
+      },
+      "expect": {
+        "fn": "enclosure_series",
+        "args": {
+          "le": 1,
+          "rho": 0.75,
+          "max_bounces": 1
+        }
+      },
+      "target": "mean",
+      "relative": true,
+      "tol": {
+        "value": 0.0000029802322387695312,
+        "derivation": "(spp-1 + 5*(D+1)) * u, spp = 16, D = 1",
+        "source": "geometric series; Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "V.D1",
+      "kind": "validators_pass",
+      "run": "d1"
+    },
+    {
+      "id": "A1.D8",
+      "kind": "image_const",
+      "run": "d8",
+      "mask": {
+        "all": true
+      },
+      "expect": {
+        "fn": "enclosure_series",
+        "args": {
+          "le": 1,
+          "rho": 0.75,
+          "max_bounces": 8
+        }
+      },
+      "target": "mean",
+      "relative": true,
+      "tol": {
+        "value": 0.000007152557373046875,
+        "derivation": "(spp-1 + 5*(D+1)) * u, spp = 16, D = 8",
+        "source": "geometric series; Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "V.D8",
+      "kind": "validators_pass",
+      "run": "d8"
+    }
+  ]
+}

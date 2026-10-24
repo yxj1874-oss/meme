@@ -1,0 +1,36 @@
+{
+  "id": "g01_det_double_run",
+  "title": "Two fresh processes and an in-process rerun produce identical bytes",
+  "covers": [
+    "determinism"
+  ],
+  "kills": [
+    "implicit-random",
+    "pool-no-clear",
+    "completion-order",
+    "clock-in-deterministic"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1-A3",
+      "kind": "fresh_process_determinism",
+      "scene": "scene.json",
+      "tol": {
+        "value": 0,
+        "derivation": "bit-exact",
+        "source": "determinism contract"
+      }
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "a"
+    }
+  ]
+}

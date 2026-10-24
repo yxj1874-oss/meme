@@ -1,0 +1,5 @@
+node_modules/
+out/
+.ci-artifacts/
+*.log
+.DS_Store

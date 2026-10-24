@@ -1,0 +1,41 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "n1": {
+      "aov.id.u32": "sha256:ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+      "aov.m2.pfm": "sha256:ee8615275b32818ba65ffe50205c4da88e31630d63ebdeb9240b931e79638b67",
+      "image.linear.pfm": "sha256:dcccf44c8b574ef4723596f71ebee6ac293562766cc5c30b1c898e152a82e7b8",
+      "image.png": "sha256:80a076284a5e2d662886ec7142f08a1889baca507629492de9e38cbfaece8079"
+    },
+    "n4": {
+      "aov.id.u32": "sha256:ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+      "aov.m2.pfm": "sha256:df0b3f75482fd4b14f78499946bbd646428a6e78641ca0515fa17619b0377fac",
+      "image.linear.pfm": "sha256:06b3d3ace20d78b0e8ee0b9f7f866f0ab01b3f93e23843346ffaed85a98b05b7",
+      "image.png": "sha256:893f9b1ecdaa0bb5b21652b84fc64d18d0ab7f493027230287b7d1b1fdc7aa05"
+    },
+    "n16": {
+      "aov.id.u32": "sha256:ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+      "aov.m2.pfm": "sha256:84ac903e7388f8de1ab7b719bb16d44c00936884bc2d9d7467958d3ee98f4028",
+      "image.linear.pfm": "sha256:da4e0fcea7366df8ee1b09315d14682f923b2135ff2b72a587cd4d6cea3a39b6",
+      "image.png": "sha256:3c918fcb9a7e96732579e5b000c6e4186a1ac31878d57e79b7d7e9015512d127"
+    },
+    "n64": {
+      "aov.id.u32": "sha256:ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+      "aov.m2.pfm": "sha256:5f6e7baead248c72bf33d46036102ad155f397916b10f677f3460c0b7d13585d",
+      "image.linear.pfm": "sha256:0d45eebf2c11ddae3243f20a69613af29d5f7b868d8b54cf93cf3502c6cfa9b8",
+      "image.png": "sha256:7c1cd07c60861ed5edbd0caf440908271c9a6b7a0ba4528a5b585e033db19d2f"
+    },
+    "n256": {
+      "aov.id.u32": "sha256:ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+      "aov.m2.pfm": "sha256:b706e26f6fc5e141f1da629a36c102dc422e4d058686380d0f839be90ffe47bb",
+      "image.linear.pfm": "sha256:47cd9b625ef05c63456c4a528cef7b6d9ef8b135d5fa3ab21cf7166f86f2f854",
+      "image.png": "sha256:b0091b482e5f896dca0c0015d89646acb61202cfa0fce07188c031e4341e4402"
+    },
+    "n1024": {
+      "aov.id.u32": "sha256:ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+      "aov.m2.pfm": "sha256:499080fd6d328468cb7d92041de23310b393cdb2cd5830666a171872ede27574",
+      "image.linear.pfm": "sha256:32609023d4368bf110f65a4809aba16f5684a822018086a930f01d6d9071e394",
+      "image.png": "sha256:0044b571fa5ca4471a3494cae3140aa9108e731d541af2ab04da9ce587d4d605"
+    }
+  }
+}

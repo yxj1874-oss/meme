@@ -1,0 +1,395 @@
+{
+  "note": "Curated semantic mutants (design \u00a73.9, MT2). Each must turn at least one golden red when applied alone; tools/mutate.ts applies them to a copy of the tree.",
+  "mutants": [
+    {
+      "id": "philox-rounds",
+      "module": "rng",
+      "file": "src/kernels/rng.wgsl",
+      "edits": [
+        {
+          "find": "for (var r = 0u; r < 10u; r++) {",
+          "replace": "for (var r = 0u; r < 9u; r++) {"
+        }
+      ],
+      "expected_red": [
+        "g04"
+      ]
+    },
+    {
+      "id": "philox-constant",
+      "module": "rng",
+      "file": "src/kernels/rng.wgsl",
+      "edits": [
+        {
+          "find": "const PHILOX_M0: u32 = 0xD2511F53u;",
+          "replace": "const PHILOX_M0: u32 = 0xD2511F52u;"
+        }
+      ],
+      "expected_red": [
+        "g04"
+      ]
+    },
+    {
+      "id": "unit-float-shift",
+      "module": "rng",
+      "file": "src/kernels/rng.wgsl",
+      "edits": [
+        {
+          "find": "return f32(u >> 8u) * 0x1p-24f;",
+          "replace": "return f32(u >> 9u) * 0x1p-24f;"
+        }
+      ],
+      "expected_red": [
+        "g04"
+      ]
+    },
+    {
+      "id": "seed-not-in-key",
+      "module": "rng",
+      "file": "src/kernels/rng.wgsl",
+      "edits": [
+        {
+          "find": "return philox4x32_10(ctr, vec2<u32>(seed, stream));",
+          "replace": "return philox4x32_10(ctr, vec2<u32>(0u, stream));"
+        }
+      ],
+      "expected_red": [
+        "g04"
+      ]
+    },
+    {
+      "id": "mulhi-limbs",
+      "module": "rng",
+      "file": "src/core/rng.ts",
+      "edits": [
+        {
+          "find": "const mid = (ll >>> 16) + (lh & 0xffff) + (hl & 0xffff);",
+          "replace": "const mid = (ll >>> 16) + (lh & 0xffff);"
+        }
+      ],
+      "expected_red": [
+        "g04"
+      ]
+    },
+    {
+      "id": "dim-block-reuse",
+      "module": "sampling",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "vec4<u32>(px, py, s, 1u + depth)",
+          "replace": "vec4<u32>(px, py, s, 0u)"
+        }
+      ],
+      "expected_red": [
+        "g10",
+        "g11"
+      ]
+    },
+    {
+      "id": "sample-index-not-in-counter",
+      "module": "sampling",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "vec4<u32>(px, py, s, 1u + depth)",
+          "replace": "vec4<u32>(px, py, 0u, 1u + depth)"
+        }
+      ],
+      "expected_red": [
+        "g11"
+      ]
+    },
+    {
+      "id": "uniform-sampling-cosine-weight",
+      "module": "bsdf",
+      "file": "src/kernels/bsdf_lambert.wgsl",
+      "edits": [
+        {
+          "find": "let r = sqrt(u1);",
+          "replace": "let r = sqrt(max(0.0, 1.0 - u1 * u1));"
+        },
+        {
+          "find": "let z = sqrt(max(0.0, 1.0 - u1));",
+          "replace": "let z = u1;"
+        }
+      ],
+      "expected_red": [
+        "g10",
+        "g12"
+      ]
+    },
+    {
+      "id": "pdf-missing-pi",
+      "module": "bsdf",
+      "file": "src/kernels/bsdf_lambert.wgsl",
+      "edits": [
+        {
+          "find": "return abs(dot(n, wi)) * INV_PI;",
+          "replace": "return abs(dot(n, wi));"
+        }
+      ],
+      "expected_red": [
+        "g12"
+      ]
+    },
+    {
+      "id": "no-ray-offset",
+      "module": "integrator",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "o = offset_ray(p, ns);",
+          "replace": "o = p;"
+        }
+      ],
+      "expected_red": [
+        "g08",
+        "g14"
+      ]
+    },
+    {
+      "id": "inside-root",
+      "module": "integrator",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "  if (tf > 0.0) {\n    return tf;\n  }\n",
+          "replace": ""
+        }
+      ],
+      "expected_red": [
+        "g09"
+      ]
+    },
+    {
+      "id": "first-hit-emission",
+      "module": "integrator",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "radiance += throughput * m.emission.xyz;",
+          "replace": "radiance += select(vec3<f32>(0.0), throughput * m.emission.xyz, depth > 0u);"
+        }
+      ],
+      "expected_red": [
+        "g09"
+      ]
+    },
+    {
+      "id": "bounce-off-by-one",
+      "module": "integrator",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "for (var depth = 0u; depth <= P.img.z; depth++) {",
+          "replace": "for (var depth = 0u; depth < P.img.z; depth++) {"
+        }
+      ],
+      "expected_red": [
+        "g09"
+      ]
+    },
+    {
+      "id": "no-parallel-guard",
+      "module": "integrator",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "    if (abs(denom) < PARALLEL_EPS) {\n      continue;\n    }\n",
+          "replace": ""
+        }
+      ],
+      "expected_red": [
+        "g13"
+      ]
+    },
+    {
+      "id": "split-env-inverted",
+      "module": "integrator",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "!(dot(d, P.env_up.xyz) > 0.0)",
+          "replace": "(dot(d, P.env_up.xyz) > 0.0)"
+        }
+      ],
+      "expected_red": [
+        "g10"
+      ]
+    },
+    {
+      "id": "pass-local-sum",
+      "module": "accumulate",
+      "file": "src/kernels/render_p0.wgsl",
+      "edits": [
+        {
+          "find": "var sum = vec3<f32>(bitcast<f32>(accum[base]), bitcast<f32>(accum[base + 1u]), bitcast<f32>(accum[base + 2u]));",
+          "replace": "let prev = vec3<f32>(bitcast<f32>(accum[base]), bitcast<f32>(accum[base + 1u]), bitcast<f32>(accum[base + 2u]));\n  var sum = vec3<f32>(0.0);"
+        },
+        {
+          "find": "accum[base] = bitcast<u32>(sum.x);\n  accum[base + 1u] = bitcast<u32>(sum.y);\n  accum[base + 2u] = bitcast<u32>(sum.z);",
+          "replace": "accum[base] = bitcast<u32>(prev.x + sum.x);\n  accum[base + 1u] = bitcast<u32>(prev.y + sum.y);\n  accum[base + 2u] = bitcast<u32>(prev.z + sum.z);"
+        }
+      ],
+      "expected_red": [
+        "g03"
+      ]
+    },
+    {
+      "id": "luminance-normalization",
+      "module": "render-host",
+      "file": "src/runtime/render.ts",
+      "edits": [
+        {
+          "find": "return scale(color, luminance / luminanceY(color));",
+          "replace": "return scale(color, luminance);"
+        }
+      ],
+      "expected_red": [
+        "g01"
+      ]
+    },
+    {
+      "id": "gravity-dt-not-dt2",
+      "module": "physics",
+      "file": "src/runtime/physics.ts",
+      "edits": [
+        {
+          "find": "g * p.dt_s * p.dt_s), p.dt_s], 0);",
+          "replace": "g * p.dt_s), p.dt_s], 0);"
+        }
+      ],
+      "expected_red": [
+        "g17"
+      ]
+    },
+    {
+      "id": "fixed-point-floor",
+      "module": "physics",
+      "file": "src/kernels/physics_p0.wgsl",
+      "edits": [
+        {
+          "find": "let whole = trunc(dx);",
+          "replace": "let whole = floor(dx);"
+        }
+      ],
+      "expected_red": [
+        "g16"
+      ]
+    },
+    {
+      "id": "insertion-order-iteration",
+      "module": "canonical",
+      "file": "src/core/jcs.ts",
+      "edits": [
+        {
+          "find": "return Object.keys(map).sort().map((k) => [k, map[k] as T]);",
+          "replace": "return Object.keys(map).map((k) => [k, map[k] as T]);"
+        }
+      ],
+      "expected_red": [
+        "g02"
+      ]
+    },
+    {
+      "id": "jcs-number-format",
+      "module": "canonical",
+      "file": "src/core/jcs.ts",
+      "edits": [
+        {
+          "find": "return Object.is(value, -0) ? \"0\" : String(value);",
+          "replace": "return Object.is(value, -0) ? \"0\" : value.toFixed(6);"
+        }
+      ],
+      "expected_red": [
+        "g02",
+        "g20"
+      ]
+    },
+    {
+      "id": "png-crc",
+      "module": "io",
+      "file": "src/io/png.ts",
+      "edits": [
+        {
+          "find": "0xedb88320 ^ (c >>> 1)",
+          "replace": "0xedb88321 ^ (c >>> 1)"
+        }
+      ],
+      "expected_red": [
+        "g01"
+      ]
+    },
+    {
+      "id": "patch-in-place",
+      "module": "patch",
+      "file": "src/core/patch.ts",
+      "edits": [
+        {
+          "find": "let root = deepClone(doc);",
+          "replace": "let root = doc;"
+        }
+      ],
+      "expected_red": [
+        "g19"
+      ]
+    },
+    {
+      "id": "no-duplicate-key-check",
+      "module": "parse",
+      "file": "src/core/json_strict.ts",
+      "edits": [
+        {
+          "find": "if (seen.has(key)) {",
+          "replace": "if (seen.has(key) && false) {"
+        }
+      ],
+      "expected_red": [
+        "g20"
+      ]
+    },
+    {
+      "id": "no-precision-check",
+      "module": "semantic",
+      "file": "src/core/semantic.ts",
+      "edits": [
+        {
+          "find": "if (obj.radius_m < bound) {",
+          "replace": "if (obj.radius_m < bound && false) {"
+        }
+      ],
+      "expected_red": [
+        "g20"
+      ]
+    },
+    {
+      "id": "nan-kind",
+      "module": "validators",
+      "file": "src/oracle/validators.ts",
+      "edits": [
+        {
+          "find": "(u & 0x007fffff) !== 0 ? \"nan\" : \"inf\"",
+          "replace": "\"nan\""
+        }
+      ],
+      "expected_red": [
+        "g15"
+      ]
+    },
+    {
+      "id": "energy-bound-off",
+      "module": "validators",
+      "file": "src/oracle/validators.ts",
+      "edits": [
+        {
+          "find": "if (!(v >= 0 && v <= b))",
+          "replace": "if (!(v >= 0))"
+        }
+      ],
+      "expected_red": [
+        "g15"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "g02_det_canonical_order",
+  "title": "Key order, number spelling and whitespace do not change any output byte",
+  "covers": [
+    "determinism"
+  ],
+  "kills": [
+    "insertion-order-iteration",
+    "jcs-number-format"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene_a.json"
+    },
+    {
+      "name": "a_shuffled",
+      "scene": "scene_a_shuffled.json"
+    },
+    {
+      "name": "b",
+      "scene": "scene_b.json"
+    },
+    {
+      "name": "b_shuffled",
+      "scene": "scene_b_shuffled.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1a",
+      "kind": "scene_hash_equal",
+      "runs": [
+        "a",
+        "a_shuffled"
+      ]
+    },
+    {
+      "id": "A2a",
+      "kind": "outputs_equal",
+      "runs": [
+        "a",
+        "a_shuffled"
+      ]
+    },
+    {
+      "id": "A1b",
+      "kind": "scene_hash_equal",
+      "runs": [
+        "b",
+        "b_shuffled"
+      ]
+    },
+    {
+      "id": "A2b",
+      "kind": "outputs_equal",
+      "runs": [
+        "b",
+        "b_shuffled"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "g17_free_fall_analytic",
+  "title": "Free fall: discrete closed form, discretization error g dt t / 2, first-order convergence",
+  "covers": [
+    "analytic.physics"
+  ],
+  "kills": [
+    "gravity-dt-not-dt2",
+    "record-step-off-by-one",
+    "explicit-euler"
+  ],
+  "runs": [
+    {
+      "name": "dt",
+      "scene": "scene_dt.json"
+    },
+    {
+      "name": "dt2",
+      "scene": "scene_dt2.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.dt",
+      "kind": "traj_closed_form",
+      "run": "dt",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A1.dt2",
+      "kind": "traj_closed_form",
+      "run": "dt2",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2.dt",
+      "kind": "discretization_error",
+      "run": "dt",
+      "body": "ball",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2.dt2",
+      "kind": "discretization_error",
+      "run": "dt2",
+      "body": "ball",
+      "tol": {
+        "value": null,
+        "derivation": "tau_v(n) = 2 n ulp(V); tau_x(n) = n q + n ulp(V dt) + n^2 dt ulp(V); V = |v0| + |g| dt steps; q = 2^-32 m",
+        "source": "per step: two roundings of v (fl(dx), * 1/dt), one quantization and one rounding of x, plus the integrated velocity error; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "dt_halving",
+      "runs": [
+        "dt",
+        "dt2"
+      ],
+      "body": "ball",
+      "ratio": [
+        1.96,
+        2.04
+      ],
+      "tol": {
+        "value": 0.04,
+        "derivation": "e(dt) = 0.15328 +- 4.92e-4, e(dt/2) = 0.07664 +- 9.80e-4 -> ratio in [1.968, 2.032]",
+        "source": "A1 tolerances"
+      }
+    }
+  ]
+}
