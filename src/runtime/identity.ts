@@ -20,7 +20,8 @@ let cached: string | undefined;
 
 export function codeHash(): string {
   if (cached !== undefined) return cached;
-  const paths = [...files(join(ROOT, "src")), join(ROOT, "schema/scene.schema.json"), join(ROOT, "package-lock.json")]
+  const schemas = readdirSync(join(ROOT, "schema")).filter((f) => f.endsWith(".json")).map((f) => join(ROOT, "schema", f));
+  const paths = [...files(join(ROOT, "src")), ...schemas, join(ROOT, "package-lock.json")]
     .map((p) => relative(ROOT, p))
     .sort();
   const parts: Uint8Array[] = [];

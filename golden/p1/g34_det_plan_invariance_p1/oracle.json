@@ -1,0 +1,97 @@
+{
+  "id": "g34_det_plan_invariance_p1",
+  "title": "P1 kernel: pass split, tile size, tile order and dispatch batching do not change any output byte (every P1 path, mis, 3 bounces)",
+  "covers": [
+    "determinism"
+  ],
+  "kills": [
+    "pass-local-sum",
+    "cross-tile-race",
+    "dispatch-dependent-state",
+    "nee-dims-reused"
+  ],
+  "runs": [
+    {
+      "name": "p1",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 64,
+        "tile_px": 64,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1
+      }
+    },
+    {
+      "name": "p2",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 16,
+        "tile_px": 16,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1
+      }
+    },
+    {
+      "name": "p3",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1,
+        "tile_px": 8,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1
+      }
+    },
+    {
+      "name": "p4",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 16,
+        "tile_px": 16,
+        "tile_order": [
+          6,
+          1,
+          10,
+          2,
+          0,
+          7,
+          8,
+          5,
+          9,
+          3,
+          11,
+          4
+        ],
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1
+      }
+    },
+    {
+      "name": "p5",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 64,
+        "tile_px": 16,
+        "submit_batches": 7,
+        "physics_steps_per_dispatch": 1
+      }
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "outputs_equal",
+      "runs": [
+        "p1",
+        "p2",
+        "p3",
+        "p4",
+        "p5"
+      ]
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "p1"
+    }
+  ]
+}

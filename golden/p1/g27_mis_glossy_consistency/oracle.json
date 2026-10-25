@@ -1,0 +1,91 @@
+{
+  "id": "g27_mis_glossy_consistency",
+  "title": "Glossy floor under a small bright and a large dim light: estimators agree; balance MIS (the default) within Veach's bound",
+  "covers": [
+    "mis",
+    "unbiasedness",
+    "ggx"
+  ],
+  "kills": [
+    "mis-weight-swap",
+    "bsdf-pdf-for-mis",
+    "light-select-unnormalized"
+  ],
+  "runs": [
+    {
+      "name": "bsdf",
+      "scene": "scene_bsdf.json"
+    },
+    {
+      "name": "nee",
+      "scene": "scene_nee.json"
+    },
+    {
+      "name": "mis",
+      "scene": "scene_mis.json"
+    },
+    {
+      "name": "power",
+      "scene": "scene_mis.json",
+      "candidates": {
+        "MIS_HEURISTIC": 0
+      }
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "strategies_agree",
+      "runs": [
+        "bsdf",
+        "nee",
+        "mis",
+        "power"
+      ],
+      "mask": {
+        "ids_in": [
+          "floor"
+        ]
+      },
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "pairwise aggregate z over the floor pixels",
+        "source": "unbiasedness of every estimator"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "mis_variance_bound",
+      "balance": "mis",
+      "bsdf": "bsdf",
+      "nee": "nee",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ]
+      },
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "as G26 A3",
+        "source": "Veach 1997 Theorem 9.2"
+      }
+    },
+    {
+      "id": "V.bsdf",
+      "kind": "validators_pass",
+      "run": "bsdf"
+    },
+    {
+      "id": "V.nee",
+      "kind": "validators_pass",
+      "run": "nee"
+    },
+    {
+      "id": "V.mis",
+      "kind": "validators_pass",
+      "run": "mis"
+    }
+  ]
+}

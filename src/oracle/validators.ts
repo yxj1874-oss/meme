@@ -2,7 +2,7 @@
 
 import { canonicalEntries } from "../core/jcs.ts";
 import type { Scene, Vec3 } from "../core/scene_types.ts";
-import { radianceRgb } from "../runtime/render.ts";
+import { KIND, materialKind, radianceRgb } from "../runtime/render.ts";
 
 export interface NonFinite {
   index: number;
@@ -28,10 +28,26 @@ export function scanNonFinite(values: Float32Array, limit = 64): { count: number
 }
 
 /**
- * Per-channel upper bound on any single path sample for the P0 integrator. With cosine sampling
- * every bounce multiplies throughput by the albedo exactly, so a path that collects emission at
- * interactions 1..D+1 and the environment once is bounded by
- *   B_c = L_env,max,c + Le_max,c * sum_{k=0..D} rho_max,c^k.
+ * How V-Energy can judge a scene (design P1D13):
+ *  - per_sample: BSDF sampling over Lambert materials only. Every bounce multiplies throughput by
+ *    the albedo exactly, so B below bounds every single sample (the P0 rule);
+ *  - statistical: light sampling or non-Lambert materials. A single NEE sample can be arbitrarily
+ *    large, but the expectation is still bounded by B (energy-conserving BSDFs, rho <= 1), so the
+ *    pixel mean must satisfy mean <= B (1 + tau) + 6 sigma_hat / sqrt(N);
+ *  - not_applicable: point lights. Radiance next to a point light has no finite bound.
+ */
+export type EnergyMode = "per_sample" | "statistical" | "not_applicable";
+
+export function energyMode(scene: Scene): EnergyMode {
+  if (Object.keys(scene.lights ?? {}).length > 0) return "not_applicable";
+  const lambert = Object.values(scene.materials).every((m) => materialKind(m) === KIND.LAMBERT);
+  return lambert && (scene.render!.strategy ?? "mis") === "bsdf" ? "per_sample" : "statistical";
+}
+
+/**
+ * Per-channel bound B_c = L_env,max,c + Le_max,c * sum_{k=0..D} rho_max,c^k on a path's value
+ * (per sample for Lambert + BSDF sampling, in expectation otherwise). Non-Lambert materials count
+ * with rho = 1: their directional albedo is at most 1.
  */
 export function energyBound(scene: Scene): Vec3 {
   const D = scene.render!.max_bounces;
@@ -44,9 +60,10 @@ export function energyBound(scene: Scene): Vec3 {
   const rhoMax: Vec3 = [0, 0, 0];
   for (const [, m] of canonicalEntries(scene.materials)) {
     const le = radianceRgb(m.emissive_cdm2 ?? 0, m.emissive_color ?? [1, 1, 1]);
+    const lambert = materialKind(m) === KIND.LAMBERT;
     for (let c = 0; c < 3; c++) {
       leMax[c] = Math.max(leMax[c]!, le[c]!);
-      rhoMax[c] = Math.max(rhoMax[c]!, m.base_color[c]!);
+      rhoMax[c] = Math.max(rhoMax[c]!, lambert ? m.base_color[c]! : 1);
     }
   }
   return [0, 1, 2].map((c) => {
@@ -66,6 +83,19 @@ export interface BoundViolation {
   channel: number;
   value: number;
   bound: number;
+}
+
+/** Statistical form: mean <= B (1 + tau) + k sigma_hat / sqrt(N), sigma_hat from the per-pixel second moment. */
+export function checkEnergyStatistical(mean: Float32Array, m2: Float32Array, spp: number, bound: Vec3, factor: number, k = 6, limit = 16): BoundViolation[] {
+  const out: BoundViolation[] = [];
+  for (let i = 0; i < mean.length && out.length < limit; i++) {
+    const c = i % 3;
+    const v = mean[i]!;
+    const variance = spp > 1 ? (Math.max(0, m2[i]! - v * v) * spp) / (spp - 1) : m2[i]!;
+    const b = bound[c]! * factor + (k * Math.sqrt(variance)) / Math.sqrt(spp);
+    if (!(v >= 0 && v <= b)) out.push({ pixel: Math.floor(i / 3), channel: c, value: v, bound: b });
+  }
+  return out;
 }
 
 export function checkEnergy(mean: Float32Array, bound: Vec3, factor: number, limit = 16): BoundViolation[] {

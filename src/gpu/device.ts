@@ -22,6 +22,9 @@ export class Gpu {
   private peak = 0;
   private readonly sizes = new Map<GPUBuffer, number>();
   private readonly uncaptured: string[] = [];
+  // Compiled pipelines by (entry point, constants, source). Compilation is deterministic, so reusing
+  // one changes no output; it removes the per-render compile (11 ms of a P0 render on lavapipe).
+  private readonly pipelines = new Map<string, Promise<GPUComputePipeline>>();
 
   constructor(instance: GPU, device: GPUDevice, adapter: AdapterIdentity) {
     this.instance = instance;
@@ -65,7 +68,17 @@ export class Gpu {
     buf.destroy();
   }
 
-  async pipeline(code: string, label: string, constants: Record<string, number> = {}, entryPoint = "main"): Promise<GPUComputePipeline> {
+  pipeline(code: string, label: string, constants: Record<string, number> = {}, entryPoint = "main"): Promise<GPUComputePipeline> {
+    const key = `${entryPoint}\u0000${JSON.stringify(Object.entries(constants).sort())}\u0000${code}`;
+    let p = this.pipelines.get(key);
+    if (p === undefined) {
+      p = this.compile(code, label, constants, entryPoint);
+      this.pipelines.set(key, p);
+    }
+    return p;
+  }
+
+  private async compile(code: string, label: string, constants: Record<string, number>, entryPoint: string): Promise<GPUComputePipeline> {
     this.device.pushErrorScope("validation");
     const module = this.device.createShaderModule({ code, label });
     const pipeline = this.device.createComputePipeline({ layout: "auto", label, compute: { module, entryPoint, constants } });

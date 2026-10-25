@@ -1,0 +1,122 @@
+{
+  "v": 2,
+  "seed": 2701,
+  "camera": {
+    "model": "pinhole",
+    "position_m": [
+      0,
+      -5,
+      2.5
+    ],
+    "look_at_m": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "vfov_rad": 0.8
+  },
+  "environment": {
+    "type": "constant",
+    "luminance_cdm2": 0,
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
+  "render": {
+    "width_px": 96,
+    "height_px": 72,
+    "spp": 256,
+    "max_bounces": 1,
+    "sampler": "independent",
+    "integrator": "pt_p1",
+    "strategy": "mis",
+    "display_white_cdm2": 1
+  },
+  "materials": {
+    "gloss": {
+      "base_color": [
+        0.9,
+        0.9,
+        0.9
+      ],
+      "metallic": 1,
+      "roughness": 0.3,
+      "ior": 1
+    },
+    "small": {
+      "base_color": [
+        0,
+        0,
+        0
+      ],
+      "metallic": 0,
+      "roughness": 1,
+      "ior": 1,
+      "emissive_cdm2": 200,
+      "emissive_color": [
+        1,
+        1,
+        1
+      ]
+    },
+    "big": {
+      "base_color": [
+        0,
+        0,
+        0
+      ],
+      "metallic": 0,
+      "roughness": 1,
+      "ior": 1,
+      "emissive_cdm2": 4,
+      "emissive_color": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "objects": {
+    "floor": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "gloss"
+    },
+    "small": {
+      "shape": "sphere",
+      "center_m": [
+        -1,
+        0,
+        0.8
+      ],
+      "radius_m": 0.08,
+      "material": "small"
+    },
+    "big": {
+      "shape": "sphere",
+      "center_m": [
+        1.2,
+        0.5,
+        1.5
+      ],
+      "radius_m": 0.8,
+      "material": "big"
+    }
+  }
+}

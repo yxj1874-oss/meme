@@ -1,0 +1,73 @@
+{
+  "set": "c_coupling",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "continuity at ior -> 1: |mean over 64 directions of the albedo at ior = 1.0001 - rho| (the ior = 1 material is exactly Lambert, albedo rho); floor 5 se of that mean",
+    "variance": "mean per-sample variance of the sampler weight",
+    "ms": "render of a rough dielectric sphere (128x128, 64 spp)",
+    "robustness": "share of 12 random dielectric materials failing energy <= 1 + 5 se, reciprocity <= 1e-4 or support"
+  },
+  "scores": [
+    {
+      "candidate": "Kelemen",
+      "value": 0,
+      "loc": 16,
+      "error": 0.00014941124827605456,
+      "errorFloor": 0.0006336875560230162,
+      "variance": 0.021270227462542236,
+      "noise": {
+        "variance": 0.00010385855729375712,
+        "ms": 11.269916999999623
+      },
+      "ms": 20.477082999999766,
+      "failure_rate": 0,
+      "notes": [
+        "max reciprocity error 4.91e-6",
+        "albedo jump at ior 1.0001: 1.49e-4 / 1.12e-4 / 7.37e-5 (se 1.3e-4 / 9.5e-5 / 6.3e-5)",
+        "max energy (E[w] - 5 se) 0.8441"
+      ]
+    },
+    {
+      "candidate": "Ashikhmin-Shirley",
+      "value": 1,
+      "loc": 4,
+      "error": 0.26293767467614093,
+      "errorFloor": 0.0009253272115722635,
+      "variance": 0.016349478336752103,
+      "noise": {
+        "variance": 0.00007983145622447701,
+        "ms": 9.349248999998963
+      },
+      "ms": 19.106082999998762,
+      "failure_rate": 0,
+      "notes": [
+        "max reciprocity error 1.16e-5",
+        "albedo jump at ior 1.0001: 2.63e-1 / 1.97e-1 / 1.31e-1 (se 1.9e-4 / 1.4e-4 / 9.3e-5)",
+        "max energy (E[w] - 5 se) 0.7891"
+      ]
+    },
+    {
+      "candidate": "naive F-weighting",
+      "value": 2,
+      "loc": 1,
+      "error": 0.000331968546379402,
+      "errorFloor": 0.0006335471040219823,
+      "variance": 0.010169551016381248,
+      "noise": {
+        "variance": 0.00004965602266109384,
+        "ms": 16.86462499999834
+      },
+      "ms": 18.07341699999961,
+      "failure_rate": 1,
+      "notes": [
+        "max reciprocity error 9.87e-1",
+        "albedo jump at ior 1.0001: 3.32e-4 / 2.48e-4 / 1.65e-4 (se 1.3e-4 / 9.5e-5 / 6.3e-5)",
+        "max energy (E[w] - 5 se) 0.8173"
+      ]
+    }
+  ],
+  "pareto": [
+    "Kelemen",
+    "Ashikhmin-Shirley"
+  ]
+}

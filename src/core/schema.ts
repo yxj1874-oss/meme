@@ -2,6 +2,8 @@
 // error codes (scene.schema.json x-error-codes). oneOf failures are reported against the branch
 // selected by the discriminator property, so a typo inside a sphere is reported as that typo and
 // not as "matches none of sphere/plane".
+// Every released schema version stays loadable (schema/scene.schema.v<N>.json); a scene is
+// validated against the version it declares, then migrated (src/core/migrate.ts).
 
 import { readFileSync } from "node:fs";
 
@@ -12,16 +14,23 @@ import { type ContractError, sortErrors } from "./errors.ts";
 
 const Ajv2020 = AjvModule.default;
 
-export const SCHEMA_URL = new URL("../../schema/scene.schema.json", import.meta.url);
-export const sceneSchema = JSON.parse(readFileSync(SCHEMA_URL, "utf8")) as Record<string, unknown>;
-const SCHEMA_ID = sceneSchema["$id"] as string;
+const SCHEMA_DIR = new URL("../../schema/", import.meta.url);
+const load = (name: string) => JSON.parse(readFileSync(new URL(name, SCHEMA_DIR), "utf8")) as Record<string, unknown>;
+
+/** The latest schema: the one the runtime executes and the one MT1 lints. */
+export const sceneSchema = load("scene.schema.json");
+export const LATEST_VERSION = ((sceneSchema["properties"] as Record<string, { const: number }>)["v"]!).const;
+const schemas = new Map<number, Record<string, unknown>>([
+  [1, load("scene.schema.v1.json")],
+  [LATEST_VERSION, sceneSchema],
+]);
 
 const DISCRIMINATORS = ["shape", "type", "op"] as const;
 
 // ajv reports schemaPath relative to the $ref target ("#/oneOf"), which loses the $defs entry,
 // so oneOf arrays are found by identity instead.
-const oneOfLocations = new Map<unknown, string>();
-indexOneOfs(sceneSchema, "");
+const oneOfLocations = new Map<unknown, { id: string; pointer: string }>();
+for (const schema of schemas.values()) indexOneOfs(schema, schema["$id"] as string, "");
 
 const KEYWORD_CODES: Record<string, string> = {
   type: "E_TYPE",
@@ -54,14 +63,26 @@ const ajv = new Ajv2020({
   // verbose puts the keyword's schema value on each error; oneOf errors are located through it.
   verbose: true,
 });
-for (const keyword of collectAnnotationKeywords(sceneSchema)) ajv.addKeyword({ keyword });
-ajv.addSchema(sceneSchema);
+const keywords = new Set<string>();
+for (const schema of schemas.values()) collectAnnotationKeywords(schema, keywords);
+for (const keyword of keywords) ajv.addKeyword({ keyword });
+for (const schema of schemas.values()) ajv.addSchema(schema);
 
-const validateSceneFn = ajv.getSchema(SCHEMA_ID) as ValidateFunction;
-const validateEnvelopeFn = ajv.getSchema(`${SCHEMA_ID}#/$defs/PatchEnvelope`) as ValidateFunction;
+const sceneValidators = new Map([...schemas].map(([v, schema]) => [v, ajv.getSchema(schema["$id"] as string) as ValidateFunction]));
+const validateEnvelopeFn = ajv.getSchema(`${sceneSchema["$id"] as string}#/$defs/PatchEnvelope`) as ValidateFunction;
 
-export function validateSceneSchema(instance: unknown): ContractError[] {
-  return runValidator(validateSceneFn, instance, "#");
+export function knownVersions(): number[] {
+  return [...schemas.keys()].sort((a, b) => a - b);
+}
+
+/** The declared version if it is a known one; anything else is checked against the latest (and fails on /v). */
+export function declaredVersion(instance: unknown): number {
+  const v = typeof instance === "object" && instance !== null ? (instance as { v?: unknown }).v : undefined;
+  return typeof v === "number" && schemas.has(v) ? v : LATEST_VERSION;
+}
+
+export function validateSceneSchema(instance: unknown, version = declaredVersion(instance)): ContractError[] {
+  return runValidator(sceneValidators.get(version)!, instance, "#");
 }
 
 export function validatePatchEnvelope(instance: unknown): ContractError[] {
@@ -104,8 +125,8 @@ function mapErrors(raw: ErrorObject[], instance: unknown, rootSchemaPath: string
 }
 
 function branchErrors(e: ErrorObject, at: string, node: unknown): ContractError[] {
-  const fragment = oneOfLocations.get(e.schema);
-  if (fragment === undefined) throw new Error(`oneOf at ${e.schemaPath} not found in the scene schema`);
+  const location = oneOfLocations.get(e.schema);
+  if (location === undefined) throw new Error(`oneOf at ${e.schemaPath} not found in the scene schema`);
   const branches = e.schema as Array<{ properties?: Record<string, { const?: unknown }> }>;
   if (typeof node !== "object" || node === null || Array.isArray(node)) {
     return [{ code: "E_TYPE", path: at, detail: "must be object" }];
@@ -119,7 +140,7 @@ function branchErrors(e: ErrorObject, at: string, node: unknown): ContractError[
       const allowed = branches.map((b) => JSON.stringify(b.properties?.[disc]?.const)).join(", ");
       return [{ code: "E_VARIANT", path: `${at}/${disc}`, detail: `${JSON.stringify(obj[disc])} is not one of ${allowed}` }];
     }
-    const fn = ajv.getSchema(`${SCHEMA_ID}#${fragment}/${k}`) as ValidateFunction;
+    const fn = ajv.getSchema(`${location.id}#${location.pointer}/${k}`) as ValidateFunction;
     if (fn(node)) return [];
     return (fn.errors ?? [])
       .filter((x) => (x as { propertyName?: string }).propertyName === undefined || x.keyword === "propertyNames")
@@ -160,14 +181,14 @@ export function getPointer(doc: unknown, pointer: string): unknown {
   return node;
 }
 
-function indexOneOfs(node: unknown, pointer: string): void {
+function indexOneOfs(node: unknown, id: string, pointer: string): void {
   if (Array.isArray(node)) {
-    node.forEach((c, i) => indexOneOfs(c, `${pointer}/${i}`));
+    node.forEach((c, i) => indexOneOfs(c, id, `${pointer}/${i}`));
   } else if (node !== null && typeof node === "object") {
     for (const [k, v] of Object.entries(node)) {
       if (k.startsWith("x-")) continue;
-      if (k === "oneOf") oneOfLocations.set(v, `${pointer}/oneOf`);
-      indexOneOfs(v, `${pointer}/${k.replace(/~/g, "~0").replace(/\//g, "~1")}`);
+      if (k === "oneOf") oneOfLocations.set(v, { id, pointer: `${pointer}/oneOf` });
+      indexOneOfs(v, id, `${pointer}/${k.replace(/~/g, "~0").replace(/\//g, "~1")}`);
     }
   }
 }

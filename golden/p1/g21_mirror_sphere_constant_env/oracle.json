@@ -1,0 +1,60 @@
+{
+  "id": "g21_mirror_sphere_constant_env",
+  "title": "Delta metal sphere (F0 = 1) in a constant environment: exactly 1; any self-hit zeroes a sample",
+  "covers": [
+    "energy.furnace",
+    "delta"
+  ],
+  "kills": [
+    "delta-no-offset",
+    "delta-weight",
+    "schlick-f0"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0.000002384185791015625,
+        "derivation": "(spp-1 + 5*D) * u, spp = 16, D = 1: the delta weight is Schlick(F0 = 1) = 1 exactly",
+        "source": "Higham 2002 §4.2; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "image_const",
+      "run": "a",
+      "mask": {
+        "ids_none": true,
+        "erode_px": 1
+      },
+      "expect": 1,
+      "target": "mean",
+      "tol": {
+        "value": 0,
+        "derivation": "exact: escaping rays return 1.0",
+        "source": "as G07"
+      }
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "a"
+    }
+  ]
+}

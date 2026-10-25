@@ -1,5 +1,5 @@
 {
-  "note": "Curated semantic mutants (design \u00a73.9, MT2). Each must turn at least one golden red when applied alone; tools/mutate.ts applies them to a copy of the tree.",
+  "note": "Curated semantic mutants (design §3.9, MT2). Each must turn at least one golden red when applied alone; tools/mutate.ts applies them to a copy of the tree.",
   "mutants": [
     {
       "id": "philox-rounds",
@@ -74,7 +74,7 @@
     {
       "id": "dim-block-reuse",
       "module": "sampling",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "vec4<u32>(px, py, s, 1u + depth)",
@@ -89,7 +89,7 @@
     {
       "id": "sample-index-not-in-counter",
       "module": "sampling",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "vec4<u32>(px, py, s, 1u + depth)",
@@ -136,7 +136,7 @@
     {
       "id": "no-ray-offset",
       "module": "integrator",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "o = offset_ray(p, ns);",
@@ -151,7 +151,7 @@
     {
       "id": "inside-root",
       "module": "integrator",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "  if (tf > 0.0) {\n    return tf;\n  }\n",
@@ -165,11 +165,11 @@
     {
       "id": "first-hit-emission",
       "module": "integrator",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
-          "find": "radiance += throughput * m.emission.xyz;",
-          "replace": "radiance += select(vec3<f32>(0.0), throughput * m.emission.xyz, depth > 0u);"
+          "find": "radiance += throughput * emission;",
+          "replace": "radiance += select(vec3<f32>(0.0), throughput * emission, depth > 0u);"
         }
       ],
       "expected_red": [
@@ -179,7 +179,7 @@
     {
       "id": "bounce-off-by-one",
       "module": "integrator",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "for (var depth = 0u; depth <= P.img.z; depth++) {",
@@ -193,7 +193,7 @@
     {
       "id": "no-parallel-guard",
       "module": "integrator",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "    if (abs(denom) < PARALLEL_EPS) {\n      continue;\n    }\n",
@@ -207,7 +207,7 @@
     {
       "id": "split-env-inverted",
       "module": "integrator",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "!(dot(d, P.env_up.xyz) > 0.0)",
@@ -221,7 +221,7 @@
     {
       "id": "pass-local-sum",
       "module": "accumulate",
-      "file": "src/kernels/render_p0.wgsl",
+      "file": "src/kernels/render_p1.wgsl",
       "edits": [
         {
           "find": "var sum = vec3<f32>(bitcast<f32>(accum[base]), bitcast<f32>(accum[base + 1u]), bitcast<f32>(accum[base + 2u]));",
@@ -233,6 +233,7 @@
         }
       ],
       "expected_red": [
+        "g34",
         "g03"
       ]
     },
@@ -247,7 +248,7 @@
         }
       ],
       "expected_red": [
-        "g01"
+        "g07"
       ]
     },
     {
@@ -318,7 +319,7 @@
         }
       ],
       "expected_red": [
-        "g01"
+        "g06"
       ]
     },
     {
@@ -383,12 +384,261 @@
       "file": "src/oracle/validators.ts",
       "edits": [
         {
-          "find": "if (!(v >= 0 && v <= b))",
-          "replace": "if (!(v >= 0))"
+          "find": "    const b = bound[c]! * factor;\n    if (!(v >= 0 && v <= b))",
+          "replace": "    const b = bound[c]! * factor;\n    if (!(v >= 0))"
         }
       ],
       "expected_red": [
         "g15"
+      ]
+    },
+    {
+      "id": "g2-as-g1",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "let g2 = 1.0 / (1.0 + ggx_lambda(wo.z, m.alpha) + ggx_lambda(wi.z, m.alpha));",
+          "replace": "let g2 = 1.0 / (1.0 + ggx_lambda(wo.z, m.alpha));"
+        }
+      ],
+      "expected_red": [
+        "g23",
+        "g24"
+      ]
+    },
+    {
+      "id": "vndf-pdf-no-g1",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "return d / ((1.0 + ggx_lambda(wo.z, alpha)) * 4.0 * wo.z);",
+          "replace": "return d / (4.0 * wo.z);"
+        }
+      ],
+      "expected_red": [
+        "g24",
+        "g23"
+      ]
+    },
+    {
+      "id": "caps-full-sphere",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "let z = (1.0 - u2) * (1.0 + wi_std.z) - wi_std.z;",
+          "replace": "let z = (1.0 - u2) * 2.0 - 1.0;"
+        }
+      ],
+      "expected_red": [
+        "g24",
+        "g23"
+      ]
+    },
+    {
+      "id": "ggx-d-cancelling",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "let t = (h.x * h.x + h.y * h.y) + h.z * h.z * a2;",
+          "replace": "let t = h.z * h.z * (a2 - 1.0) + 1.0;"
+        }
+      ],
+      "expected_red": [
+        "g24"
+      ]
+    },
+    {
+      "id": "fresnel-schlick-for-dielectric",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "(1.0 - m.metallic) * vec3<f32>(fr_dielectric(cos_oh, m.ior));",
+          "replace": "(1.0 - m.metallic) * fr_schlick(vec3<f32>(0.04), cos_oh);"
+        }
+      ],
+      "expected_red": [
+        "g22",
+        "g24"
+      ]
+    },
+    {
+      "id": "fresnel-eta-inverted",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "let sin2_t = (1.0 - c * c) / (eta * eta);",
+          "replace": "let sin2_t = (1.0 - c * c) * (eta * eta);"
+        }
+      ],
+      "expected_red": [
+        "g22",
+        "g24"
+      ]
+    },
+    {
+      "id": "delta-reflect-direction",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "let wi = vec3<f32>(-wo.x, -wo.y, wo.z);",
+          "replace": "let wi = vec3<f32>(wo.x, wo.y, wo.z);"
+        }
+      ],
+      "expected_red": [
+        "g22",
+        "g30"
+      ]
+    },
+    {
+      "id": "coupling-naive",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "override COUPLING: u32 = 0u;",
+          "replace": "override COUPLING: u32 = 2u;"
+        }
+      ],
+      "expected_red": [
+        "g24"
+      ]
+    },
+    {
+      "id": "kelemen-ebar-dropped",
+      "module": "bsdf-p1",
+      "file": "src/kernels/bsdf_p1.wgsl",
+      "edits": [
+        {
+          "find": "return (1.0 - eo) * (1.0 - ei) / max(1.0 - ebar, 1e-6);",
+          "replace": "return (1.0 - eo) * (1.0 - ei);"
+        }
+      ],
+      "expected_red": [
+        "g24"
+      ]
+    },
+    {
+      "id": "point-inverse-square",
+      "module": "lights",
+      "file": "src/kernels/render_p1.wgsl",
+      "edits": [
+        {
+          "find": "return LightSample(dv / dist, dist, l.rad.xyz / r2, 0.0, true);",
+          "replace": "return LightSample(dv / dist, dist, l.rad.xyz / dist, 0.0, true);"
+        }
+      ],
+      "expected_red": [
+        "g25",
+        "g31"
+      ]
+    },
+    {
+      "id": "mis-weight-swap",
+      "module": "mis",
+      "file": "src/kernels/render_p1.wgsl",
+      "edits": [
+        {
+          "find": "let w = select(mis_weight(pl, bsdf_pdf(mat, ns, -d, ls.wi)), 1.0, strategy == STRATEGY_NEE);",
+          "replace": "let w = select(mis_weight(bsdf_pdf(mat, ns, -d, ls.wi), pl), 1.0, strategy == STRATEGY_NEE);"
+        }
+      ],
+      "expected_red": [
+        "g26",
+        "g27"
+      ]
+    },
+    {
+      "id": "nee-bsdf-double-count",
+      "module": "mis",
+      "file": "src/kernels/render_p1.wgsl",
+      "edits": [
+        {
+          "find": "      let pl = l.rad.w * light_pdf(l, prev_p, d, x, h.n);\n      let w = select(mis_weight(prev_pdf, pl), select(1.0, 0.0, pl > 0.0), strategy == STRATEGY_NEE);",
+          "replace": "      let pl = l.rad.w * light_pdf(l, prev_p, d, x, h.n);\n      let w = select(mis_weight(prev_pdf, pl), select(1.0, 1.0, pl > 0.0), strategy == STRATEGY_NEE);"
+        }
+      ],
+      "expected_red": [
+        "g26",
+        "g27"
+      ]
+    },
+    {
+      "id": "cone-pdf-halved",
+      "module": "lights",
+      "file": "src/kernels/render_p1.wgsl",
+      "edits": [
+        {
+          "find": "    return 1.0 / (2.0 * PI * omc);",
+          "replace": "    return 1.0 / (PI * omc);"
+        }
+      ],
+      "expected_red": [
+        "g26",
+        "g27",
+        "g29"
+      ]
+    },
+    {
+      "id": "env-pdf-hemisphere",
+      "module": "lights",
+      "file": "src/kernels/render_p1.wgsl",
+      "edits": [
+        {
+          "find": "return select(0.0, 1.0 / (2.0 * PI), dot(wi, P.env_up.xyz) > 0.0);",
+          "replace": "return select(0.0, 1.0 / (4.0 * PI), dot(wi, P.env_up.xyz) > 0.0);"
+        }
+      ],
+      "expected_red": [
+        "g28"
+      ]
+    },
+    {
+      "id": "migration-ior-default",
+      "module": "migration",
+      "file": "src/core/migrate.ts",
+      "edits": [
+        {
+          "find": "m[\"ior\"] ??= 1;",
+          "replace": "m[\"ior\"] ??= 1.5;"
+        }
+      ],
+      "expected_red": [
+        "g32"
+      ]
+    },
+    {
+      "id": "light-inside-check-off",
+      "module": "semantic",
+      "file": "src/core/semantic.ts",
+      "edits": [
+        {
+          "find": "norm(sub(l.position_m, o.center_m)) <= o.radius_m",
+          "replace": "norm(sub(l.position_m, o.center_m)) <= o.radius_m && false"
+        }
+      ],
+      "expected_red": [
+        "g33"
+      ]
+    },
+    {
+      "id": "lambert-path-through-general-bsdf",
+      "module": "integrator",
+      "file": "src/kernels/render_p1.wgsl",
+      "edits": [
+        {
+          "find": "if ((MATERIALS & 6u) == 0u || kind == KIND_LAMBERT) {",
+          "replace": "if (kind == KIND_LAMBERT && false) {"
+        }
+      ],
+      "expected_red": [
+        "g32"
       ]
     }
   ]

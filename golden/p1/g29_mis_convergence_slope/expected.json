@@ -1,0 +1,41 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "n1": {
+      "aov.id.u32": "sha256:eec54ef1c87a19a9f6cce6725d2943f576ba2b3c1c541384bb20a15eec8cc03d",
+      "aov.m2.pfm": "sha256:18ee0925b442ba7a0387471fb4179cbdc19dd07f68fedab10f3a971856c168eb",
+      "image.linear.pfm": "sha256:02e9d54e6a29cde3ebb7aee8c839e9e66180efa1fb8cca046f7b6e3d7a30db60",
+      "image.png": "sha256:c795461205044b1f9b89e8e2586e5c45d8e3cc54ac30fe92b0be696ce64edfa8"
+    },
+    "n4": {
+      "aov.id.u32": "sha256:eec54ef1c87a19a9f6cce6725d2943f576ba2b3c1c541384bb20a15eec8cc03d",
+      "aov.m2.pfm": "sha256:8de578cf6f982d36e42912c908a6bfe4e19259b0407297ae92727b9a3b9e04f5",
+      "image.linear.pfm": "sha256:00f4737bb1aabec30533bebf4de6947861fd7bbd25c31685b539cb1ebcdb0c8d",
+      "image.png": "sha256:2c9aaa1b5f785d207265547a298ebe5c736c5b9078a36b924286669bddacbb0e"
+    },
+    "n16": {
+      "aov.id.u32": "sha256:eec54ef1c87a19a9f6cce6725d2943f576ba2b3c1c541384bb20a15eec8cc03d",
+      "aov.m2.pfm": "sha256:2eb5a62bdd45f46d70077314977e13f13128dd769ff471551b37481bba5d5c55",
+      "image.linear.pfm": "sha256:a076ae0777f9f781a461dacf9f30ea5ad327575b01091cf6e148e56fb1026cc9",
+      "image.png": "sha256:0c9566c92dddda2db878672bfc87eeda2462463609ea6ddc3be1da78246f5d1e"
+    },
+    "n64": {
+      "aov.id.u32": "sha256:eec54ef1c87a19a9f6cce6725d2943f576ba2b3c1c541384bb20a15eec8cc03d",
+      "aov.m2.pfm": "sha256:455e444578324a6d5ec212d9376bc396ca6b6fd8bfa7fe2302b348894d87a22c",
+      "image.linear.pfm": "sha256:788d16fc22abbe36aa56562f5a05876415c3ed6c023954acb75e31cc3a323c17",
+      "image.png": "sha256:edff5c948d36d8fa6ed8539bba07ae346895bc80eee65a4473f9ffb8b237a714"
+    },
+    "n256": {
+      "aov.id.u32": "sha256:eec54ef1c87a19a9f6cce6725d2943f576ba2b3c1c541384bb20a15eec8cc03d",
+      "aov.m2.pfm": "sha256:f370e454696b627343b5dc6b80f35c7886571dc893bd31df8a3ccd39dbb7e22d",
+      "image.linear.pfm": "sha256:74f392f6355c121c192459c1e3132eef37518a6d5be14bc1de175a768d1999aa",
+      "image.png": "sha256:1a11420b2d3e9a635ae2914f9d2d620fe5ecc6b1adaa6339dcd926443ec5b2a1"
+    },
+    "n1024": {
+      "aov.id.u32": "sha256:eec54ef1c87a19a9f6cce6725d2943f576ba2b3c1c541384bb20a15eec8cc03d",
+      "aov.m2.pfm": "sha256:30bb7698afc2c887a432242f60da3f3d59d45f99c7942abb9581fdf03e9a5e6b",
+      "image.linear.pfm": "sha256:2c1604523e20d4b1204e1212fdcd04d674c4c7730754e26d4600762e5c19c1fc",
+      "image.png": "sha256:96442187e8482f5766b13f5b62aafd67f1cc8c3b4fcabc32b05da6bd22b8de78"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "g25_point_light_lambert_plane",
+  "title": "Point light over a Lambert plane, nee: per pixel (rho / pi) I cos(theta) / r^2",
+  "covers": [
+    "nee.point",
+    "replay",
+    "units.cd"
+  ],
+  "kills": [
+    "point-inverse-square",
+    "point-select-probability",
+    "intensity-units"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "replay_exact",
+      "run": "a",
+      "replay": "point_light_direct",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ]
+      },
+      "min_pixels": 5000,
+      "rel": 0.00002,
+      "tol": {
+        "value": 1e-7,
+        "derivation": "rel: r^2 and cos from f32 camera-relative points (|p| ~ 6 m, r ~ 2-6 m) carry <= 16 ulp relative error -> 2e-6, times 4 for the product and margin; abs floor for pixels near the horizon",
+        "source": "f64 replay; inverse-square law; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "a"
+    }
+  ]
+}

@@ -65,6 +65,17 @@ export function semanticErrors(scene: Scene): ContractError[] {
     }
   }
 
+  const lights = canonicalEntries(scene.lights ?? {});
+  for (const [id, l] of lights) {
+    const at = pointerJoin("/lights", id);
+    if (l.intensity_cd > 0 && luminanceY(l.color) < MIN_COLOR_Y) push("E_COLOR_LUMINANCE", at, `Y(color) < ${MIN_COLOR_Y}`);
+    for (const [oid, o] of objects) {
+      if (o.shape === "sphere" && norm(sub(l.position_m, o.center_m)) <= o.radius_m) {
+        push("E_LIGHT_INSIDE", at, `point light is inside or on sphere ${JSON.stringify(oid)}`);
+      }
+    }
+  }
+
   const bodies = objects.filter(([, o]) => o.shape === "sphere" && o.body !== undefined);
   if (scene.physics !== undefined) {
     const p = scene.physics;
@@ -84,11 +95,12 @@ export function semanticErrors(scene: Scene): ContractError[] {
 
   if (scene.render !== undefined) {
     const r = scene.render;
-    const work = r.width_px * r.height_px * r.spp * (r.max_bounces + 1) * Math.max(1, objects.length);
-    if (work > RENDER_BUDGET) push("E_BUDGET", "/render", `width*height*spp*(max_bounces+1)*objects = ${work} > 2^36`);
+    const rays = (r.strategy ?? "mis") === "bsdf" ? 1 : 2; // light sampling adds a shadow ray per bounce
+    const work = r.width_px * r.height_px * r.spp * (r.max_bounces + 1) * Math.max(1, objects.length) * rays;
+    if (work > RENDER_BUDGET) push("E_BUDGET", "/render", `width*height*spp*(max_bounces+1)*objects*rays = ${work} > 2^36`);
   }
 
-  for (const [ns, entries] of [["/materials", materials], ["/objects", objects]] as const) {
+  for (const [ns, entries] of [["/materials", materials], ["/objects", objects], ["/lights", lights]] as const) {
     const owners = new Map<number, string>();
     for (const [id] of entries) {
       const h = idhash32(id);

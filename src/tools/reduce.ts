@@ -23,6 +23,7 @@ import { fingerprint, type Substrate } from "../gpu/substrate.ts";
 import { type Context, evaluate } from "../oracle/assertions.ts";
 import { DEFAULT_PLAN, planProblem } from "../runtime/plan.ts";
 import { type RunOptions, runScene } from "../runtime/run.ts";
+import { resolveGolden } from "./golden_sets.ts";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const CLI = fileURLToPath(new URL("../cli.ts", import.meta.url));
@@ -196,13 +197,7 @@ export async function reduce(gpu: Gpu, substrate: Substrate, target: ReduceTarge
   return { scene, evaluations, before, after: { objects: Object.keys(scene["objects"]).length, materials: Object.keys(scene["materials"]).length }, steps };
 }
 
-function resolveGolden(id: string): string | undefined {
-  const p0 = join(ROOT, "golden", "p0");
-  return readdirSync(p0).find((g) => g === id || g.startsWith(`${id}_`));
-}
-
-function targetFromGolden(gid: string, assertId?: string): ReduceTarget | string {
-  const dir = join(ROOT, "golden", "p0", gid);
+function targetFromGolden(gid: string, dir: string, assertId?: string): ReduceTarget | string {
   const oracle = JSON.parse(readFileSync(join(dir, "oracle.json"), "utf8")) as { runs: RunSpec[]; asserts: Record<string, unknown>[] };
   const reportPath = join(ROOT, "out", "golden", gid, "report.json");
   let id = assertId;
@@ -236,12 +231,13 @@ export async function cmdReduce(args: string[]): Promise<number> {
   const gpu = await openGpu();
   const substrate = await fingerprint(gpu);
   for (const id of gids) {
-    const gid = resolveGolden(id);
-    if (gid === undefined) {
+    const ref = resolveGolden(id);
+    if (ref === undefined) {
       console.log(`${id}: no such golden`);
       continue;
     }
-    const target = targetFromGolden(gid, assertId);
+    const gid = ref.id;
+    const target = targetFromGolden(gid, ref.dir, assertId);
     if (typeof target === "string") {
       console.log(target);
       continue;

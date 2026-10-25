@@ -1,6 +1,8 @@
 // MT2 mutation suite (design §3.9, D11-A): every curated mutant in ci/mutants.json, applied alone to
 // a copy of the tree, must turn at least one golden red. Run it on the reference substrate so the
 // golden hash check is active:  ci/run-in-ref.sh node tools/mutate.ts [mutant-id ...]
+// Each mutant first runs only the goldens listed as expected_red, then the full suite if it survived
+// them (at least one red golden is the criterion, so the subset is enough to kill).
 // A survivor means the goldens cannot see that change; the report says whether each kill came
 // from an oracle assertion or only from the output hashes. --keep leaves each mutated tree in
 // out/mutants/<id>/ (for example to run `meme reduce` against it).
@@ -58,9 +60,9 @@ function applyEdits(dir: string, m: Mutant): void {
   writeFileSync(path, text);
 }
 
-function verify(dir: string): { exit: number | null; red: { gid: string; oracle: boolean }[]; seconds: number; output: string } {
+function verify(dir: string, goldens: string[] = []): { exit: number | null; red: { gid: string; oracle: boolean }[]; seconds: number; output: string } {
   const t0 = process.hrtime.bigint();
-  const r = spawnSync(process.execPath, [join(dir, "src", "cli.ts"), "golden", "verify", "--require-hashes"], { cwd: dir, encoding: "utf8", timeout: 900_000 });
+  const r = spawnSync(process.execPath, [join(dir, "src", "cli.ts"), "golden", "verify", "--require-hashes", ...goldens], { cwd: dir, encoding: "utf8", timeout: 900_000 });
   const seconds = Number(process.hrtime.bigint() - t0) / 1e9;
   const red: { gid: string; oracle: boolean }[] = [];
   for (const line of (r.stdout ?? "").split("\n")) {
@@ -92,7 +94,10 @@ for (const m of mutants) {
   const dir = join(WORK, m.id);
   prepareTree(dir);
   applyEdits(dir, m);
-  const v = verify(dir);
+  // The goldens the mutant is expected to break go first; one red golden settles it. Only a mutant
+  // that survives them pays for the whole suite.
+  let v = verify(dir, m.expected_red);
+  if (v.exit === 0) v = verify(dir);
   const outcome: Outcome = {
     id: m.id,
     killed: v.exit !== 0,

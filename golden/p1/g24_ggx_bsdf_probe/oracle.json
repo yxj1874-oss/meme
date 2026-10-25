@@ -1,0 +1,717 @@
+{
+  "id": "g24_ggx_bsdf_probe",
+  "title": "P1 material: albedo vs f64 quadrature, energy <= 1, sampler weights, reciprocity, support, chi-square",
+  "covers": [
+    "energy.bsdf",
+    "reciprocity",
+    "ggx"
+  ],
+  "kills": [
+    "coupling-not-reciprocal",
+    "kelemen-ebar",
+    "spec-probability-pdf",
+    "vndf-sampling"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A.metal_r03",
+      "kind": "material_probe",
+      "seed": 2400,
+      "material": {
+        "base_color": [
+          0.9,
+          0.6,
+          0.3
+        ],
+        "metallic": 1,
+        "roughness": 0.3,
+        "ior": 1
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.metal_r06",
+      "kind": "material_probe",
+      "seed": 2401,
+      "material": {
+        "base_color": [
+          0.9,
+          0.6,
+          0.3
+        ],
+        "metallic": 1,
+        "roughness": 0.6,
+        "ior": 1
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.metal_r10",
+      "kind": "material_probe",
+      "seed": 2402,
+      "material": {
+        "base_color": [
+          0.9,
+          0.6,
+          0.3
+        ],
+        "metallic": 1,
+        "roughness": 1,
+        "ior": 1
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.coat_r03",
+      "kind": "material_probe",
+      "seed": 2403,
+      "material": {
+        "base_color": [
+          0.8,
+          0.5,
+          0.2
+        ],
+        "metallic": 0,
+        "roughness": 0.3,
+        "ior": 1.5
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.coat_r06",
+      "kind": "material_probe",
+      "seed": 2404,
+      "material": {
+        "base_color": [
+          0.8,
+          0.5,
+          0.2
+        ],
+        "metallic": 0,
+        "roughness": 0.6,
+        "ior": 1.5
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.coat_r10",
+      "kind": "material_probe",
+      "seed": 2405,
+      "material": {
+        "base_color": [
+          0.8,
+          0.5,
+          0.2
+        ],
+        "metallic": 0,
+        "roughness": 1,
+        "ior": 1.5
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.mixed",
+      "kind": "material_probe",
+      "seed": 2406,
+      "material": {
+        "base_color": [
+          0.3,
+          0.7,
+          0.9
+        ],
+        "metallic": 0.5,
+        "roughness": 0.45,
+        "ior": 1.8
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.metal_r01",
+      "kind": "material_probe",
+      "seed": 2407,
+      "material": {
+        "base_color": [
+          0.9,
+          0.6,
+          0.3
+        ],
+        "metallic": 1,
+        "roughness": 0.1,
+        "ior": 1
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.coat_r01",
+      "kind": "material_probe",
+      "seed": 2408,
+      "material": {
+        "base_color": [
+          0.8,
+          0.5,
+          0.2
+        ],
+        "metallic": 0,
+        "roughness": 0.1,
+        "ior": 1.5
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.metal_r03_vndf",
+      "kind": "material_probe",
+      "seed": 2409,
+      "material": {
+        "base_color": [
+          0.9,
+          0.6,
+          0.3
+        ],
+        "metallic": 1,
+        "roughness": 0.3,
+        "ior": 1
+      },
+      "candidates": {
+        "GGX_SAMPLER": 0
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    },
+    {
+      "id": "A.coat_r01_vndf",
+      "kind": "material_probe",
+      "seed": 2410,
+      "material": {
+        "base_color": [
+          0.8,
+          0.5,
+          0.2
+        ],
+        "metallic": 0,
+        "roughness": 0.1,
+        "ior": 1.5
+      },
+      "candidates": {
+        "GGX_SAMPLER": 0
+      },
+      "directions": 256,
+      "blocks": 64,
+      "samples_per_block": 256,
+      "reciprocity_pairs": 4096,
+      "histogram_samples": 1048576,
+      "histogram_wo": [
+        0.8660254037844386,
+        0,
+        0.5
+      ],
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "albedo: |E[w] - E_ref| <= max(5 se_robust, albedo_floor) (Bonferroni over 768 tests; se_robust takes the invalid-sample share at its Wilson 95% upper bound, since smooth lobes see ~1e-4 invalid samples and a direction can draw none; the adaptive-quadrature reference agrees with an independent slope-space integral to 1e-7, the Kelemen table enters both sides identically)",
+        "source": "f64 reference src/oracle/ref_bsdf.ts; Wilson 1927; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "albedo_floor": {
+          "value": 0.0002,
+          "derivation": "f32 block sums of 256 weights carry <= 256u = 3e-5 relative error and the reference 1e-7; the floor only binds where 5 se_robust < 2e-4",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "retest_factor": {
+          "value": 16,
+          "derivation": "a 5-sigma exceedance (A1 or A2) is re-measured with 16x the samples, the first blocks included: a bias grows 4x in z, a heavy-tail outlier shrinks 4x (coat_r06 seed 2404: -5.55 -> -0.52; 48 other seeds: max |z| 3.82)",
+          "source": "two-stage re-measurement; numbers measured on the reference substrate, docs/P1-01-design.md R16"
+        },
+        "weight_rel": {
+          "value": 0.00006103515625,
+          "derivation": "the same ~40-operation expression compiled at two call sites may round differently (divisions 2.5 ulp, reassociation allowed: WGSL §15.7.4, §15.7.5); D takes sin^2 from the tangent components, so it does not cancel near the normal",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_rel": {
+          "value": 0.0001,
+          "derivation": "dot(wo, h) and dot(wi, h) round separately (<= 6u apart) and enter F; |F'| / F reaches ~10 for ior 1.5 near grazing",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 9.5367431640625e-7,
+          "derivation": "wi = 2 (wo.h) h - wo with |h|, |wo| = 1 +- 2u; the cosine-lobe sample as in G12 (sin / cos to ~1 ulp on the reference substrate, WGSL guarantees only 2^-11)",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
+      }
+    }
+  ]
+}

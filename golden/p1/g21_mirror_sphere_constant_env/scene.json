@@ -1,0 +1,66 @@
+{
+  "v": 2,
+  "seed": 2101,
+  "camera": {
+    "model": "pinhole",
+    "position_m": [
+      0,
+      -4,
+      0
+    ],
+    "look_at_m": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "vfov_rad": 0.6
+  },
+  "environment": {
+    "type": "constant",
+    "luminance_cdm2": 1,
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
+  "render": {
+    "width_px": 128,
+    "height_px": 128,
+    "spp": 16,
+    "max_bounces": 1,
+    "sampler": "independent",
+    "integrator": "pt_p1",
+    "strategy": "mis",
+    "display_white_cdm2": 1
+  },
+  "materials": {
+    "mirror": {
+      "base_color": [
+        1,
+        1,
+        1
+      ],
+      "metallic": 1,
+      "roughness": 0,
+      "ior": 1
+    }
+  },
+  "objects": {
+    "ball": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0
+      ],
+      "radius_m": 1,
+      "material": "mirror"
+    }
+  }
+}

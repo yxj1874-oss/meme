@@ -1,0 +1,86 @@
+{
+  "id": "g28_env_nee_split_sky",
+  "title": "Environment light sampling on the G10 tilted plane: nee and mis keep the closed form rho (1 + cos theta) / 2",
+  "covers": [
+    "nee.env",
+    "mis"
+  ],
+  "kills": [
+    "env-pdf-hemisphere",
+    "env-mis-weight"
+  ],
+  "runs": [
+    {
+      "name": "nee",
+      "scene": "scene_nee.json"
+    },
+    {
+      "name": "mis",
+      "scene": "scene_mis.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.nee",
+      "kind": "image_mean_ksigma",
+      "run": "nee",
+      "mask": {
+        "ids_in": [
+          "slab"
+        ]
+      },
+      "expect": {
+        "fn": "split_sky_tilted_plane",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "sigma": {
+        "from_m2": true
+      },
+      "k": 4,
+      "tol": {
+        "value": null,
+        "derivation": "|mean - mu| <= 4 sqrt(sum var_p / N) / P",
+        "source": "isotropic sky view factor (Duffie & Beckman); CLT"
+      }
+    },
+    {
+      "id": "A2.nee",
+      "kind": "channels_equal",
+      "run": "nee"
+    },
+    {
+      "id": "A1.mis",
+      "kind": "image_mean_ksigma",
+      "run": "mis",
+      "mask": {
+        "ids_in": [
+          "slab"
+        ]
+      },
+      "expect": {
+        "fn": "split_sky_tilted_plane",
+        "args": {
+          "rho": 0.5,
+          "cos_theta": 0.5000000000000001
+        }
+      },
+      "sigma": {
+        "from_m2": true
+      },
+      "k": 4,
+      "tol": {
+        "value": null,
+        "derivation": "|mean - mu| <= 4 sqrt(sum var_p / N) / P",
+        "source": "isotropic sky view factor (Duffie & Beckman); CLT"
+      }
+    },
+    {
+      "id": "A2.mis",
+      "kind": "channels_equal",
+      "run": "mis"
+    }
+  ]
+}

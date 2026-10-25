@@ -1,4 +1,4 @@
-// Assertion kinds used by golden/p0/*/oracle.json. Every kind returns one or more results with the
+// Assertion kinds used by golden/<set>/*/oracle.json. Every kind returns one or more results with the
 // measured value next to the expectation, so a failing oracle says by how much it failed.
 
 import { readdirSync, readFileSync } from "node:fs";
@@ -10,7 +10,8 @@ import type { Json } from "../core/json_strict.ts";
 import { applyJsonPatch, applyScenePatch, jsonEqual, type PatchOp } from "../core/patch.ts";
 import { HarnessRng, philox4x32R, rng4, toUnitFloat } from "../core/rng.ts";
 import { type LoadedScene, loadSceneText, loadSceneValue } from "../core/scene.ts";
-import type { Vec3 } from "../core/scene_types.ts";
+import { parseStrict as parseStrictText } from "../core/json_strict.ts";
+import type { Scene, Vec3 } from "../core/scene_types.ts";
 import { sceneSchema, validateSceneSchema } from "../core/schema.ts";
 import { dot, luminanceY, norm } from "../core/vec.ts";
 import type { Gpu } from "../gpu/device.ts";
@@ -19,8 +20,16 @@ import { decodeBodies, dynamicBodies } from "../runtime/physics.ts";
 import { ID_NONE } from "../runtime/render.ts";
 import { exitCodeFor, type RunOutput } from "../runtime/run.ts";
 import { compareRuns, determinismCheck } from "../tools/determinism.ts";
+import { allGoldens } from "../tools/golden_sets.ts";
 import { PHILOX_KAT } from "./kat.ts";
-import { cosineBinProbability, HIST_MU, HIST_PHI, probeBsdf, type RngCase, rngCrossCheck } from "./probes.ts";
+import { cosineBinProbability, HIST_MU, HIST_PHI, probeBsdf, probeMaterial, type RngCase, rngCrossCheck } from "./probes.ts";
+import { histogramExpectation, materialAlbedo, type RefMaterial } from "./ref_bsdf.ts";
+import { deltaReflection, pointLightDirect, replay, type ReplayImage, type SampleValue, sphereLightPlane } from "./replay.ts";
+import { migrateToLatest, rollbackTo } from "../core/migrate.ts";
+import { DEFAULT_PLAN } from "../runtime/plan.ts";
+import { runScene } from "../runtime/run.ts";
+import { fingerprint, substrateId } from "../gpu/substrate.ts";
+import { DEFAULT_CANDIDATES, kelemenTableBytes } from "../runtime/render.ts";
 import { sampleScene } from "./schema_sampler.ts";
 import { lintSchema } from "./schema_lint.ts";
 import { chiSquare, olsSlope, pearson } from "./stats.ts";
@@ -47,6 +56,13 @@ export interface Context {
 }
 
 type Params = Record<string, any>;
+
+/** A named bound from the assertion's `bounds` (locked by MT5 like `tol`). */
+function bound(a: Params, name: string): number {
+  const b = a["bounds"]?.[name] as { value: number } | undefined;
+  if (b === undefined || typeof b.value !== "number") throw new Error(`assertion ${a["id"]}: missing bound ${name}`);
+  return b.value;
+}
 type Kind = (ctx: Context, a: Params) => Promise<Result[]> | Result[];
 
 const one = (a: Params, pass: boolean, measured?: unknown, expected?: unknown, detail?: unknown): Result[] => [{ id: a["id"], pass, measured, expected, detail }];
@@ -239,9 +255,18 @@ const KINDS: Record<string, Kind> = {
     const vals = masked(r, a["mask"], 0);
     const N = r.output.render!.spp;
     const mu = value(a["expect"]);
-    const sigma = value(a["sigma"]);
     const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
-    const bound = (a["k"] * sigma) / Math.sqrt(vals.length * N);
+    let bound: number;
+    if (a["sigma"]?.["from_m2"]) {
+      // Per-pixel variances from the second moment: the image mean's standard error.
+      const res = r.output.render!;
+      const mk = mask(r, a["mask"]);
+      let v = 0;
+      for (let p = 0; p < mk.length; p++) if (mk[p]) v += pixelVariance(res, p, 0) / N;
+      bound = (a["k"] * Math.sqrt(v)) / vals.length;
+    } else {
+      bound = (a["k"] * value(a["sigma"])) / Math.sqrt(vals.length * N);
+    }
     return one(a, vals.length > 0 && Math.abs(mean - mu) <= bound, { mean, error: mean - mu, pixels: vals.length }, { mu, bound });
   },
 
@@ -268,12 +293,32 @@ const KINDS: Record<string, Kind> = {
   convergence: (ctx, a) => {
     const names = a["runs"] as string[];
     const spp = a["spp"] as number[];
-    const mu = value(a["expect"]);
-    const sigma = value(a["sigma"]);
-    const rmse = names.map((n) => {
-      const v = masked(run(ctx, n), a["mask"], 0);
-      return Math.sqrt(v.reduce((s, x) => s + (x - mu) ** 2, 0) / v.length);
-    });
+    let rmse: number[];
+    let sigma: number;
+    if (a["expect"]?.["replay"]) {
+      // Per-pixel expectations from the f64 replay; sigma from the per-pixel variance of one run.
+      rmse = names.map((n) => {
+        const rep = replayed(ctx, a["expect"]["replay"], n);
+        const res = run(ctx, n).output.render!;
+        const px = usable(ctx, n, a["mask"], rep);
+        return Math.sqrt(px.reduce((s, p) => s + (res.mean[p * 3]! - rep.expected[p * 3]!) ** 2, 0) / px.length);
+      });
+      // Light-transport noise of one sample: the reference run's per-sample variance minus the
+      // anti-aliasing variance of the replayed expectations across the same pixel's samples.
+      const refName = a["sigma"]["from_run_m2"] as string;
+      const ref = run(ctx, refName).output.render!;
+      const refRep = replayed(ctx, a["expect"]["replay"], refName);
+      const px = usable(ctx, refName, a["mask"], refRep);
+      const v = px.reduce((s, p) => s + Math.max(0, pixelVariance(ref, p, 0) - refRep.jitterVar[p * 3]!), 0);
+      sigma = Math.sqrt(v / px.length);
+    } else {
+      const mu = value(a["expect"]);
+      sigma = value(a["sigma"]);
+      rmse = names.map((n) => {
+        const v = masked(run(ctx, n), a["mask"], 0);
+        return Math.sqrt(v.reduce((s, x) => s + (x - mu) ** 2, 0) / v.length);
+      });
+    }
     const fit = olsSlope(spp.map(Math.log), rmse.map(Math.log));
     const calib = spp.map((n, i) => (rmse[i]! * Math.sqrt(n)) / sigma);
     const [lo, hi] = a["slope"] as [number, number];
@@ -386,10 +431,75 @@ const KINDS: Record<string, Kind> = {
       { id: `${id}:A1 albedo`, pass: a1 === 0, measured: { failing: a1, worst_z: worstZ }, expected: `|a - rho| <= ${k} se` },
       { id: `${id}:A2 energy`, pass: a2 === 0, measured: { failing: a2 } },
       { id: `${id}:A3 pdf`, pass: a3 === 0, measured: { failing: a3 } },
-      { id: `${id}:A4 sampler`, pass: a4 === 0 && r.maxWeightRelDiff <= 8 * 2 ** -23, measured: { failing_means: a4, max_weight_rel_diff: r.maxWeightRelDiff }, expected: { max_weight_rel_diff: 8 * 2 ** -23 } },
-      { id: `${id}:A5 reciprocity`, pass: r.maxReciprocityDiff <= (2 ** -22 * Math.max(...albedo)) / Math.PI, measured: r.maxReciprocityDiff },
-      { id: `${id}:A6 support`, pass: r.minF >= 0 && r.minPdf >= 0 && r.supportViolations === 0 && r.outsideHemisphere === 0 && r.zeroPdfSamples === 0 && r.maxLengthError <= 4 * 2 ** -23, measured: { min_f: r.minF, min_pdf: r.minPdf, support: r.supportViolations, outside: r.outsideHemisphere, zero_pdf: r.zeroPdfSamples, len_err: r.maxLengthError } },
-      { id: `${id}:A7 chi2`, pass: chi.p >= 1e-4, measured: chi, expected: "p >= 1e-4" },
+      { id: `${id}:A4 sampler`, pass: a4 === 0 && r.maxWeightRelDiff <= bound(a, "weight_rel"), measured: { failing_means: a4, max_weight_rel_diff: r.maxWeightRelDiff }, expected: { max_weight_rel_diff: bound(a, "weight_rel") } },
+      { id: `${id}:A5 reciprocity`, pass: r.maxReciprocityDiff <= (bound(a, "reciprocity_per_max_f") * Math.max(...albedo)) / Math.PI, measured: r.maxReciprocityDiff },
+      { id: `${id}:A6 support`, pass: r.minF >= 0 && r.minPdf >= 0 && r.supportViolations === 0 && r.outsideHemisphere === 0 && r.zeroPdfSamples === 0 && r.maxLengthError <= bound(a, "length"), measured: { min_f: r.minF, min_pdf: r.minPdf, support: r.supportViolations, outside: r.outsideHemisphere, zero_pdf: r.zeroPdfSamples, len_err: r.maxLengthError } },
+      { id: `${id}:A7 chi2`, pass: chi.p >= bound(a, "chi2_p"), measured: chi, expected: `p >= ${bound(a, "chi2_p")}` },
+    ];
+  },
+
+  // G24: the P1 material against an f64 reference. Albedo through the material's own sampler
+  // (importance sampled, so low-roughness lobes do not produce the heavy tails a uniform estimator
+  // has) must match the quadrature reference; everything else as in G12.
+  material_probe: async (ctx, a) => {
+    const material = a["material"] as { base_color: Vec3; metallic: number; roughness: number; ior: number };
+    const k = a["k"] as number;
+    const candidates = (a["candidates"] ?? {}) as { COUPLING?: number; GGX_SAMPLER?: number };
+    const cfg = {
+      seed: a["seed"], material, directions: a["directions"], blocks: a["blocks"], samplesPerBlock: a["samples_per_block"],
+      reciprocityPairs: a["reciprocity_pairs"], histogramSamples: a["histogram_samples"], histogramWo: a["histogram_wo"], candidates,
+    };
+    const r = await probeMaterial(ctx.gpu, cfg);
+    const table = new Float32Array(kelemenTableBytes().slice().buffer);
+    const ref: RefMaterial = { albedo: material.base_color, metallic: material.metallic, alpha: material.roughness ** 2, ior: material.ior };
+    const floor = bound(a, "albedo_floor");
+    const albedoChecks = (res: typeof r) => {
+      let failing = 0;
+      let worstZ = 0;
+      let energy = 0;
+      let maxAlbedo = 0;
+      res.sampler.forEach((s, i) => {
+        const want = materialAlbedo(ref, res.albedo[i]!.mu, candidates.COUPLING ?? DEFAULT_CANDIDATES.COUPLING, table);
+        for (let c = 0; c < 3; c++) {
+          const diff = Math.abs(s.mean[c]! - want[c]!);
+          const z = diff / Math.max(s.seRobust[c]!, 1e-12);
+          worstZ = Math.max(worstZ, Math.min(z, (k * diff) / floor));
+          if (!(diff <= Math.max(k * s.seRobust[c]!, floor))) failing++;
+          if (!(s.mean[c]! <= 1 + k * s.seRobust[c]!)) energy++;
+          maxAlbedo = Math.max(maxAlbedo, s.mean[c]!);
+        }
+      });
+      return { failing, worst_z: worstZ, energy, max_albedo: maxAlbedo };
+    };
+    // Sampler weights of glossy coats are heavy-tailed: a direction that draws none of its rare large
+    // weights reads low with a small sample se (G24 coat_r06, seed 2404: z = -5.55 at 16 384 samples,
+    // -0.52 at 16x). Any k-sigma exceedance is therefore re-measured with retest_factor times the
+    // samples (the first blocks included, so it is deterministic); a bias grows by sqrt(factor) in z,
+    // an outlier shrinks by it. The verdict is the retest's.
+    const first = albedoChecks(r);
+    let final = first;
+    let retest: ReturnType<typeof albedoChecks> | undefined;
+    if (first.failing > 0 || first.energy > 0) {
+      retest = albedoChecks(await probeMaterial(ctx.gpu, { ...cfg, blocks: cfg.blocks * bound(a, "retest_factor") }));
+      final = retest;
+    }
+    const failing = final.failing;
+    const energy = final.energy;
+    const worstZ = final.worst_z;
+    const maxAlbedo = final.max_albedo;
+    const stage = (firstStage: object) => (retest ? { first: firstStage, retest_factor: bound(a, "retest_factor") } : {});
+    const total = r.histogram.reduce((x, v) => x + v, 0);
+    const shares = histogramExpectation(ref, a["histogram_wo"], HIST_MU, HIST_PHI, candidates.GGX_SAMPLER ?? DEFAULT_CANDIDATES.GGX_SAMPLER);
+    const chi = chiSquare(r.histogram, shares.map((p) => p * total));
+    const weightTol = bound(a, "weight_rel");
+    const id = a["id"];
+    return [
+      { id: `${id}:A1 albedo vs f64 reference`, pass: failing === 0, measured: { failing, worst_z: worstZ, ...stage({ failing: first.failing, worst_z: first.worst_z }) }, expected: `|E[w] - E_ref| <= max(${k} se_robust, ${floor})` },
+      { id: `${id}:A2 energy`, pass: energy === 0, measured: { failing: energy, max_albedo: maxAlbedo, ...stage({ failing: first.energy, max_albedo: first.max_albedo }) }, expected: `E[w] <= 1 + ${k} se_robust` },
+      { id: `${id}:A3 sampler weight`, pass: r.maxWeightRelDiff <= weightTol, measured: r.maxWeightRelDiff, expected: weightTol },
+      { id: `${id}:A4 reciprocity`, pass: r.maxReciprocityRel <= bound(a, "reciprocity_rel"), measured: r.maxReciprocityRel, expected: bound(a, "reciprocity_rel") },
+      { id: `${id}:A5 support`, pass: r.minF >= 0 && r.supportViolations === 0 && r.zeroPdfSamples === 0 && r.maxLengthError <= bound(a, "length"), measured: { min_f: r.minF, support: r.supportViolations, zero_pdf: r.zeroPdfSamples, len_err: r.maxLengthError }, expected: { len_err: bound(a, "length") } },
+      { id: `${id}:A6 chi2`, pass: chi.p >= bound(a, "chi2_p"), measured: chi, expected: `p >= ${bound(a, "chi2_p")}` },
     ];
   },
 
@@ -495,15 +605,14 @@ const KINDS: Record<string, Kind> = {
   golden_scenes_valid: (ctx, a) => {
     const failures: unknown[] = [];
     let count = 0;
-    const p0 = join(ctx.root, "golden", "p0");
-    for (const g of readdirSync(p0, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
-      const oracle = JSON.parse(readFileSync(join(p0, g, "oracle.json"), "utf8")) as { runs: { scene: string }[] };
+    for (const g of allGoldens(join(ctx.root, "golden"))) {
+      const oracle = JSON.parse(readFileSync(join(g.dir, "oracle.json"), "utf8")) as { runs: { scene: string }[] };
       for (const s of new Set(oracle.runs.map((r) => r.scene))) {
         count++;
         try {
-          loadSceneText(readFileSync(join(p0, g, s), "utf8"));
+          loadSceneText(readFileSync(join(g.dir, s), "utf8"));
         } catch (err) {
-          failures.push({ scene: `${g}/${s}`, errors: err instanceof ContractViolation ? err.errors : String(err) });
+          failures.push({ scene: `${g.set}/${g.id}/${s}`, errors: err instanceof ContractViolation ? err.errors : String(err) });
         }
       }
     }
@@ -547,6 +656,243 @@ const KINDS: Record<string, Kind> = {
     }
     return one(a, crashes.length === 0 && unsound === 0, { accepted, rejected, outside_schema: unsound, codes: Object.fromEntries([...codes].sort()), crashes });
   },
+};
+
+// ---------------------------------------------------------------------------------------------
+// P1: replay-based and multi-strategy checks (goldens G21-G33).
+
+/** GGX conductor with F0 = base_color under a constant environment: E(mu) per channel, interpolated. */
+function ggxFurnace(scene: Scene): SampleValue {
+  const sphereMat = Object.values(scene.objects).find((o) => o.shape === "sphere")!.material;
+  const m = scene.materials[sphereMat]!;
+  const ref: RefMaterial = { albedo: m.base_color, metallic: m.metallic ?? 0, alpha: (m.roughness ?? 1) ** 2, ior: m.ior ?? 1 };
+  const table = new Float32Array(kelemenTableBytes().slice().buffer);
+  const N = 128;
+  const grid = Array.from({ length: N + 1 }, (_, i) => materialAlbedo(ref, i / N, 0, table));
+  return (ctx, d, hit) => {
+    const env = ctx.environment(d);
+    if (hit === null || env === "fragile") return env;
+    const mu = Math.min(1, Math.max(0, -dot(d, hit.n)));
+    const t = mu * N;
+    const i = Math.min(N - 1, Math.floor(t));
+    const f = t - i;
+    const L = ctx.environment(hit.n);
+    if (L === "fragile") return "fragile";
+    return [0, 1, 2].map((c) => (grid[i]![c]! * (1 - f) + grid[i + 1]![c]! * f) * L[c]!) as Vec3;
+  };
+}
+
+function replayed(ctx: Context, name: string, runName: string): ReplayImage {
+  const r = run(ctx, runName);
+  const cache = (ctx as Context & { replays?: Map<string, ReplayImage> }).replays ?? new Map<string, ReplayImage>();
+  (ctx as Context & { replays?: Map<string, ReplayImage> }).replays = cache;
+  const key = `${name}@${r.loaded.scene_hash}`;
+  if (!cache.has(key)) {
+    const scene = r.loaded.scene;
+    const fn: SampleValue = name === "delta_reflection" ? deltaReflection : name === "point_light_direct" ? pointLightDirect : name === "sphere_light_plane" ? sphereLightPlane : name === "ggx_furnace" ? ggxFurnace(scene) : (() => {
+      throw new Error(`unknown replay ${name}`);
+    })();
+    cache.set(key, replay(scene, fn));
+  }
+  return cache.get(key)!;
+}
+
+/** Pixels in the mask whose replay is not fragile. */
+function usable(ctx: Context, runName: string, m: Params | undefined, rep: ReplayImage): number[] {
+  const mk = m ? mask(run(ctx, runName), m) : new Uint8Array(rep.width * rep.height).fill(1);
+  const out: number[] = [];
+  for (let p = 0; p < mk.length; p++) if (mk[p] && !rep.fragile[p]) out.push(p);
+  return out;
+}
+
+function pixelVariance(res: NonNullable<RunOutput["render"]>, p: number, c: number): number {
+  const N = res.spp;
+  const mean = res.mean[p * 3 + c]!;
+  return N > 1 ? (Math.max(0, res.m2[p * 3 + c]! - mean * mean) * N) / (N - 1) : 0;
+}
+
+const P1_KINDS: Record<string, Kind> = {
+  // Deterministic paths: every usable pixel within abs + rel * |expected| of the f64 replay.
+  replay_exact: (ctx, a) => {
+    const rep = replayed(ctx, a["replay"], a["run"]);
+    const res = run(ctx, a["run"]).output.render!;
+    const pixels = usable(ctx, a["run"], a["mask"], rep);
+    const abs = a["tol"]["value"] as number;
+    const rel = (a["rel"] as number | undefined) ?? 0;
+    let bad = 0;
+    let worst = 0;
+    for (const p of pixels) {
+      for (let c = 0; c < 3; c++) {
+        const e = rep.expected[p * 3 + c]!;
+        const err = Math.abs(res.mean[p * 3 + c]! - e);
+        worst = Math.max(worst, err / (abs + rel * Math.abs(e)));
+        if (!(err <= abs + rel * Math.abs(e))) bad++;
+      }
+    }
+    const minPixels = (a["min_pixels"] as number | undefined) ?? 16;
+    return one(a, bad === 0 && pixels.length >= minPixels, { pixels: pixels.length, fragile: rep.fragile.reduce((n, f) => n + f, 0), failing: bad, worst_ratio_to_tolerance: worst }, { abs, rel, min_pixels: minPixels });
+  },
+
+  // Stochastic paths: in each of `groups` groups of pixels (sorted by expected luminance),
+  // |mean(I - E)| <= k * sqrt(sum var_p / N) / n.
+  replay_stat: (ctx, a) => {
+    const rep = replayed(ctx, a["replay"], a["run"]);
+    const res = run(ctx, a["run"]).output.render!;
+    const pixels = usable(ctx, a["run"], a["mask"], rep);
+    const lum = (p: number) => 0.2126 * rep.expected[p * 3]! + 0.7152 * rep.expected[p * 3 + 1]! + 0.0722 * rep.expected[p * 3 + 2]!;
+    const sorted = [...pixels].sort((x, y) => lum(x) - lum(y) || x - y);
+    const groups = (a["groups"] as number | undefined) ?? 1;
+    const k = a["k"] as number;
+    let worst = 0;
+    let bad = 0;
+    const detail: unknown[] = [];
+    for (let g = 0; g < groups; g++) {
+      const part = sorted.slice(Math.floor((g * sorted.length) / groups), Math.floor(((g + 1) * sorted.length) / groups));
+      for (let c = 0; c < 3; c++) {
+        let diff = 0;
+        let v = 0;
+        for (const p of part) {
+          diff += res.mean[p * 3 + c]! - rep.expected[p * 3 + c]!;
+          // The expectation is conditioned on the sample positions: only light-transport noise remains.
+          v += Math.max(0, pixelVariance(res, p, c) - rep.jitterVar[p * 3 + c]!) / res.spp;
+        }
+        const z = v > 0 ? Math.abs(diff) / Math.sqrt(v) : diff === 0 ? 0 : Infinity;
+        worst = Math.max(worst, z);
+        if (!(z <= k)) {
+          bad++;
+          detail.push({ group: g, channel: c, z, mean_diff: diff / part.length });
+        }
+      }
+    }
+    return one(a, bad === 0 && pixels.length >= groups * 8, { pixels: pixels.length, worst_z: worst, failing: detail }, { k, groups });
+  },
+
+  // Unbiasedness across estimators: pairwise aggregate z over the masked pixels.
+  strategies_agree: (ctx, a) => {
+    const names = a["runs"] as string[];
+    const k = a["k"] as number;
+    const mk = mask(run(ctx, names[0]!), a["mask"]);
+    const results: Result[] = [];
+    for (let i = 0; i < names.length; i++) {
+      for (let j = i + 1; j < names.length; j++) {
+        const A = run(ctx, names[i]!).output.render!;
+        const B = run(ctx, names[j]!).output.render!;
+        let worst = 0;
+        for (let c = 0; c < 3; c++) {
+          let diff = 0;
+          let v = 0;
+          for (let p = 0; p < mk.length; p++) {
+            if (!mk[p]) continue;
+            diff += A.mean[p * 3 + c]! - B.mean[p * 3 + c]!;
+            v += pixelVariance(A, p, c) / A.spp + pixelVariance(B, p, c) / B.spp;
+          }
+          worst = Math.max(worst, v > 0 ? Math.abs(diff) / Math.sqrt(v) : diff === 0 ? 0 : Infinity);
+        }
+        results.push({ id: `${a["id"]}:${names[i]}~${names[j]}`, pass: worst <= k, measured: { z: worst }, expected: { k } });
+      }
+    }
+    return results;
+  },
+
+  // Veach 1997, Theorem 9.2: the balance heuristic's per-sample variance is at most that of any
+  // other weighting of the same samples (in particular BSDF-only or light-only) plus
+  // (1/min n_i - 1/sum n_i) mu^2 = mu^2 / 2 for one sample of each technique.
+  mis_variance_bound: (ctx, a) => {
+    const bal = run(ctx, a["balance"]).output.render!;
+    const bsdf = run(ctx, a["bsdf"]).output.render!;
+    const nee = run(ctx, a["nee"]).output.render!;
+    const mk = mask(run(ctx, a["balance"]), a["mask"]);
+    let lhs = 0;
+    let rhs = 0;
+    let P = 0;
+    for (let p = 0; p < mk.length; p++) {
+      if (!mk[p]) continue;
+      P++;
+      for (let c = 0; c < 3; c++) {
+        const mu = bal.mean[p * 3 + c]!;
+        lhs += pixelVariance(bal, p, c);
+        rhs += Math.min(pixelVariance(bsdf, p, c), pixelVariance(nee, p, c)) + (mu * mu) / 2;
+      }
+    }
+    const slack = 1 + a["k"] * Math.sqrt(2 / ((bal.spp - 1) * Math.max(1, P * 3)));
+    return one(a, lhs <= rhs * slack && P > 0, { sum_var_balance: lhs, bound: rhs, ratio: lhs / rhs }, { slack });
+  },
+
+  // Roughness -> 0 continuity: mean |I_alpha - I_delta| decreases with alpha and the last is at
+  // most ratio_max of the first.
+  roughness_limit: (ctx, a) => {
+    const delta = run(ctx, a["delta"]).output.render!;
+    const mk = mask(run(ctx, a["delta"]), a["mask"]);
+    const d = (a["runs"] as string[]).map((n) => {
+      const res = run(ctx, n).output.render!;
+      let s = 0;
+      let cnt = 0;
+      for (let p = 0; p < mk.length; p++) {
+        if (!mk[p]) continue;
+        for (let c = 0; c < 3; c++) {
+          s += Math.abs(res.mean[p * 3 + c]! - delta.mean[p * 3 + c]!);
+          cnt++;
+        }
+      }
+      return s / Math.max(1, cnt);
+    });
+    const monotone = d.every((x, i) => i === 0 || x < d[i - 1]!);
+    return one(a, monotone && d.at(-1)! <= a["ratio_max"] * d[0]!, { mean_abs_diff: d }, { decreasing: true, last_over_first: `<= ${a["ratio_max"]}` });
+  },
+
+  // G32: every p0 run, executed by today's runtime, reproduces the P0 image, AOV and state bytes.
+  p0_byte_identity: async (ctx, a) => {
+    const snap = JSON.parse(readFileSync(join(ctx.dir, a["snapshot"]), "utf8")) as { substrate_id: string; goldens: Record<string, Record<string, Record<string, string>>> };
+    const substrate = await fingerprint(ctx.gpu);
+    const sid = substrateId(substrate);
+    if (sid !== snap.substrate_id) return one(a, false, { skipped: `snapshot recorded on ${snap.substrate_id}; this is ${sid}` });
+    const diffs: unknown[] = [];
+    let files = 0;
+    for (const g of allGoldens(join(ctx.root, "golden")).filter((x) => x.set === "p0")) {
+      const oracle = JSON.parse(readFileSync(join(g.dir, "oracle.json"), "utf8")) as { runs: { name: string; scene: string; plan?: object; faults?: object; patches?: string[] }[] };
+      for (const spec of oracle.runs) {
+        const want = snap.goldens[g.id]?.[spec.name];
+        if (want === undefined) continue;
+        let loaded = loadSceneText(readFileSync(join(g.dir, spec.scene), "utf8"));
+        for (const pth of spec.patches ?? []) loaded = applyScenePatch(loaded, { v: 1, base_scene_hash: loaded.scene_hash, ops: JSON.parse(readFileSync(join(g.dir, pth), "utf8")) } as unknown as Json);
+        const out = await runScene(ctx.gpu, loaded, substrate, { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}) });
+        for (const [file, hash] of Object.entries(want)) {
+          files++;
+          if (out.manifest.deterministic.outputs[file] !== hash) diffs.push({ golden: g.id, run: spec.name, file });
+        }
+      }
+    }
+    return one(a, diffs.length === 0 && files > 0, { files_compared: files, differing: diffs.slice(0, 20) });
+  },
+
+  migration_roundtrip: (ctx, a) => {
+    const failures: unknown[] = [];
+    let count = 0;
+    for (const g of allGoldens(join(ctx.root, "golden")).filter((x) => x.set === "p0")) {
+      const oracle = JSON.parse(readFileSync(join(g.dir, "oracle.json"), "utf8")) as { runs: { scene: string }[] };
+      for (const s of new Set(oracle.runs.map((r) => r.scene))) {
+        count++;
+        const v1 = parseStrictText(readFileSync(join(g.dir, s), "utf8"));
+        const up = migrateToLatest(v1, 1).scene;
+        const again = migrateToLatest(rollbackTo(up, 1), 1).scene;
+        if (jcs(up) !== jcs(again)) failures.push(`${g.id}/${s}`);
+      }
+    }
+    return one(a, failures.length === 0 && count > 0, { scenes: count, failures });
+  },
+
+  rollback_lossy: (ctx, a) =>
+    (a["cases"] as Params[]).map((c) => {
+      const loaded = loadSceneText(readFileSync(join(ctx.dir, c["file"]), "utf8"));
+      let got: unknown = "lossless";
+      try {
+        rollbackTo(loaded.scene as unknown as Json, 1);
+      } catch (err) {
+        if (!(err instanceof ContractViolation)) throw err;
+        got = err.errors.map((e) => `${e.code}@${e.path}`);
+      }
+      return { id: `${a["id"]}:${c["file"]}`, pass: jsonEqual(got as Json, c["expect"]), measured: got, expected: c["expect"] };
+    }),
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -624,7 +970,7 @@ function physicsCheck(ctx: Context, a: Params, mode: "trajectory" | "ke" | "drif
 }
 
 export async function evaluate(ctx: Context, a: Params): Promise<Result[]> {
-  const kind = KINDS[a["kind"]];
+  const kind = KINDS[a["kind"]] ?? P1_KINDS[a["kind"]];
   if (kind === undefined) throw new Error(`unknown assertion kind ${a["kind"]}`);
   return kind(ctx, a);
 }

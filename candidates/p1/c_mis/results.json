@@ -1,0 +1,51 @@
+{
+  "set": "c_mis",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "|z| of G26 against the view-factor closed form; floor 5",
+    "variance": "summed per-pixel variance on G26 + G27 floors",
+    "ms": "render of G26 + G27 (mis)",
+    "robustness": "share of 12 random sphere-light scenes (a third touching the floor) failing validators or |z| <= 5"
+  },
+  "scores": [
+    {
+      "candidate": "power (beta = 2)",
+      "value": 0,
+      "loc": 4,
+      "error": 1.3123579204224738,
+      "errorFloor": 5,
+      "variance": 37445.2734083122,
+      "noise": {
+        "variance": 207.18179442691164,
+        "ms": 34.031457999997656
+      },
+      "ms": 112.658792000002,
+      "failure_rate": 0,
+      "notes": [
+        "G26 z = 1.31",
+        "G26 variance 7.699e-1, G27 variance 3.744e+4"
+      ]
+    },
+    {
+      "candidate": "balance",
+      "value": 1,
+      "loc": 3,
+      "error": 1.0282034252414995,
+      "errorFloor": 5,
+      "variance": 36678.021449905114,
+      "noise": {
+        "variance": 202.93611833084108,
+        "ms": 29.549748999990697
+      },
+      "ms": 117.34629199999472,
+      "failure_rate": 0,
+      "notes": [
+        "G26 z = 1.03",
+        "G26 variance 4.496e+0, G27 variance 3.667e+4"
+      ]
+    }
+  ],
+  "pareto": [
+    "balance"
+  ]
+}

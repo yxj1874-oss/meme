@@ -3,27 +3,16 @@
 // requires an empty diff, so a golden cannot drift from its definition.
 // Usage: node tools/gen_golden.ts [--check]
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 
 import { HarnessRng, STREAM } from "../src/core/rng.ts";
+import { emitSet, type GoldenDef, json, tol } from "./golden_lib.ts";
 
 const ROOT = new URL("../golden/p0/", import.meta.url).pathname;
 const check = process.argv.includes("--check");
 
 type J = unknown;
 type Vec3 = [number, number, number];
-interface Golden {
-  id: string;
-  title: string;
-  covers: string[];
-  kills: string[];
-  files: Record<string, string>;
-  runs: J[];
-  asserts: J[];
-}
-
-const tol = (value: number | null, derivation: string, source: string) => ({ value, derivation, source });
+type Golden = GoldenDef;
 const U = "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)";
 
 // ---------------------------------------------------------------------------------------------
@@ -39,7 +28,6 @@ const sphere = (center: Vec3, r: number, material: string, body?: { mass_kg: num
 const plane = (point: Vec3, normal: Vec3, material: string) => ({ shape: "plane", point_m: point, normal, material });
 const scene = (seed: number, parts: Record<string, J>) => ({ v: 1, seed, ...parts });
 
-const json = (v: J) => `${JSON.stringify(v, null, 2)}\n`;
 
 // ---------------------------------------------------------------------------------------------
 // G01 base scene, reused by G02, G03, G15, G19
@@ -311,7 +299,13 @@ out.push({
     reciprocity_pairs: 4096,
     histogram_samples: 1 << 20,
     k: 5,
-    tol: tol(null, "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4", "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"),
+    tol: tol(null, "5 sigma (Bonferroni over 768 direction x channel tests)", "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"),
+    bounds: {
+      weight_rel: tol(8 * 2 ** -23, "the sampler weight is the albedo in exact arithmetic; sample and recompute differ by a few roundings of rho / pi and cos / pdf: 8u", U),
+      reciprocity_per_max_f: tol(2 ** -22, "f = rho / pi does not depend on the directions, so f(wo, wi) and f(wi, wo) run identical operations: 2^-22 of max f leaves room for one differently fused multiply", U),
+      length: tol(4 * 2 ** -23, "| |wi| - 1 | of the unnormalized cosine sample (r cos phi, r sin phi, sqrt(1 - r^2)) with sin / cos to ~1 ulp as on the reference substrate; WGSL only guarantees 2^-11 absolute for sin / cos (§15.7.4.1), under which this bound would be 2^-10", U),
+      chi2_p: tol(1e-4, "chi-square p-value floor: a correct sampler fails with probability 1e-4 per test, deterministic under the fixed seed", "pbrt-v3 src/tests/bsdfs.cpp chi2 test"),
+    },
   })),
 });
 
@@ -539,7 +533,7 @@ const invalid: [string, Mut | string, string, string][] = [
   ["env_black_color", (s) => Object.assign(s, withRender(), { environment: envConst(1, [0, 0, 0]) }), "E_COLOR_LUMINANCE", "/environment"],
   ["render_budget", (s) => Object.assign(s, withRender(), { render: render(4096, 4096, 65536, 256) }), "E_BUDGET", "/render"],
   ["id_hash_collision", (s) => { s.objects = { c2ya8: sphere([0, 0, 1], 1, "m"), czki6: sphere([3, 0, 1], 1, "m") }; }, "E_ID_HASH_COLLISION", "/objects"],
-  ["version_2", (s) => (s.v = 2), "E_ENUM", "/v"],
+  ["version_3", (s) => (s.v = 3), "E_ENUM", "/v"],
   ["seed_negative", (s) => (s.seed = -1), "E_RANGE", "/seed"],
   ["seed_2_32", (s) => (s.seed = 4294967296), "E_RANGE", "/seed"],
   ["render_without_camera", (s) => Object.assign(s, { environment: envConst(1), render: render(16, 16, 1, 1) }), "E_RENDER_REQUIRES", ""],
@@ -582,29 +576,6 @@ out.push({
 // ---------------------------------------------------------------------------------------------
 
 if (out.length !== 20) throw new Error(`expected 20 goldens, got ${out.length}`);
-let drift = 0;
-for (const g of out) {
-  const dir = join(ROOT, g.id);
-  const oracle = { id: g.id, title: g.title, covers: g.covers, kills: g.kills, runs: g.runs, asserts: g.asserts };
-  const files: Record<string, string> = { ...g.files, "oracle.json": json(oracle) };
-  for (const [name, text] of Object.entries(files)) {
-    const p = join(dir, name);
-    if (check) {
-      if (!existsSync(p) || readFileSync(p, "utf8") !== text) {
-        console.log(`out of date: ${p}`);
-        drift++;
-      }
-    } else {
-      mkdirSync(join(p, ".."), { recursive: true });
-      writeFileSync(p, text);
-    }
-  }
-}
-if (!check) {
-  // Remove generated files that no longer belong to any golden (expected.json is kept: it comes from golden rebase).
-  for (const g of readdirSync(ROOT, { withFileTypes: true })) {
-    if (g.isDirectory() && !out.some((o) => o.id === g.name)) rmSync(join(ROOT, g.name), { recursive: true });
-  }
-}
+const drift = emitSet(ROOT, out, check);
 console.log(check ? `gen_golden --check: ${drift} file(s) out of date` : `wrote ${out.length} goldens to ${ROOT}`);
 process.exit(drift === 0 ? 0 : 1);

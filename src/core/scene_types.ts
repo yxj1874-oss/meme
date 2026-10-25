@@ -1,10 +1,11 @@
-// TypeScript view of schema/scene.schema.json v1. Only produced by validateScene(), so every
-// value here is already range-checked; field names carry their units like the schema does.
+// TypeScript view of schema/scene.schema.json (v2, the latest). Only produced by loadSceneValue(),
+// so every value here is already range-checked, migrated and canonical (defaults expanded); field
+// names carry their units like the schema does.
 
 export type Vec3 = [number, number, number];
 
 export interface Scene {
-  v: 1;
+  v: 2;
   seed: number;
   meta?: { name?: string; note?: string };
   camera?: Camera;
@@ -13,7 +14,12 @@ export interface Scene {
   physics?: Physics;
   materials: { [id: string]: Material };
   objects: { [id: string]: SceneObject };
+  lights?: { [id: string]: Light };
 }
+
+export type Light = { type: "point"; position_m: Vec3; intensity_cd: number; color: Vec3 };
+
+export type Strategy = "bsdf" | "nee" | "mis";
 
 export interface Camera {
   model: "pinhole";
@@ -33,7 +39,8 @@ export interface Render {
   spp: number;
   max_bounces: number;
   sampler: "independent";
-  integrator: "pt_bsdf_p0";
+  integrator: "pt_p1";
+  strategy?: Strategy;
   display_white_cdm2: number;
 }
 
@@ -49,6 +56,9 @@ export interface Material {
   base_color: Vec3;
   emissive_cdm2?: number;
   emissive_color?: Vec3;
+  metallic?: number;
+  roughness?: number;
+  ior?: number;
 }
 
 export interface Body {

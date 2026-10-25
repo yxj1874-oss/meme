@@ -1,0 +1,70 @@
+{
+  "set": "c_ggx_sampler",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "largest z = |E[w] - E_ref| / max(se_robust, 4e-5) of the sampler's albedo against the f64 reference, 64 directions x 3 channels x 3 metals (the G24 A1 rule); floor 5",
+    "variance": "mean per-sample variance of the sampler weight (metals, roughness 0.1 / 0.3 / 0.7)",
+    "ms": "render of G23 r03 (GGX metal furnace)",
+    "robustness": "share of 12 random materials failing energy <= 1 + 5 se, albedo z <= 5, reciprocity or support"
+  },
+  "scores": [
+    {
+      "candidate": "VNDF (Heitz 2018)",
+      "value": 0,
+      "loc": 19,
+      "error": 2.405753801270033,
+      "errorFloor": 5,
+      "variance": 0.020401790788869296,
+      "noise": {
+        "variance": 0.00011502913230803332,
+        "ms": 25.938207999997758
+      },
+      "ms": 30.53637499999968,
+      "failure_rate": 0,
+      "notes": [
+        "invalid (below-horizon) sample share at roughness 0.1 / 0.3 / 0.7: 0.0014 / 0.0167 / 0.1363",
+        "albedo checks failing the G24 rule: 0"
+      ]
+    },
+    {
+      "candidate": "spherical caps",
+      "value": 1,
+      "loc": 16,
+      "error": 2.866085174586647,
+      "errorFloor": 5,
+      "variance": 0.020351679713983228,
+      "noise": {
+        "variance": 0.00011474659664619759,
+        "ms": 13.913625000001048
+      },
+      "ms": 30.09245799999917,
+      "failure_rate": 0,
+      "notes": [
+        "invalid (below-horizon) sample share at roughness 0.1 / 0.3 / 0.7: 0.0014 / 0.0167 / 0.1361",
+        "albedo checks failing the G24 rule: 0"
+      ]
+    },
+    {
+      "candidate": "D(m) cos",
+      "value": 2,
+      "loc": 10,
+      "error": 2.550393251856409,
+      "errorFloor": 5,
+      "variance": 0.20724318415309287,
+      "noise": {
+        "variance": 0.001168476037058972,
+        "ms": 20.260666000001947
+      },
+      "ms": 27.973582999999053,
+      "failure_rate": 0,
+      "notes": [
+        "invalid (below-horizon) sample share at roughness 0.1 / 0.3 / 0.7: 0.0061 / 0.0837 / 0.3295",
+        "albedo checks failing the G24 rule: 0"
+      ]
+    }
+  ],
+  "pareto": [
+    "spherical caps",
+    "D(m) cos"
+  ]
+}

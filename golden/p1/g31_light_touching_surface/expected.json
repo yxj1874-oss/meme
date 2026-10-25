@@ -1,0 +1,17 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "sphere": {
+      "aov.id.u32": "sha256:252abb592be2f90d70ad413cf11479f3aa0d4b6aa132395175ef0fb3e147eb70",
+      "aov.m2.pfm": "sha256:ecdea0b17b5ecf7ac64b906aaff6dafab0bafeed7a4f888ef03fe310d089bfbe",
+      "image.linear.pfm": "sha256:d6f7e76bb69c8ee3f93c7474b6b1dfc9dcbc944b6f4a9cfdbd31e91a366cddb5",
+      "image.png": "sha256:e8481f9f572d7493165b2e21f8d4874d5f91f2d415a68d57c4f1a84faa5fd23c"
+    },
+    "point": {
+      "aov.id.u32": "sha256:7c1328cf5ce3bc547aa1c23b14e8312df76eacadcb53ec807c367cfb5eca7ee1",
+      "aov.m2.pfm": "sha256:666684c29c7c19f5675414a17e4e3a7d4225a0b38705d1aed7b5db1e3186a2fc",
+      "image.linear.pfm": "sha256:f39313ba1df6556a5ca69fb1cbe59fd68888f54fc5a65b2e221aaa9969220f4b",
+      "image.png": "sha256:becb796a349c333db977d650579b46ff05a7112b717ff300389e7e8128b4d3cf"
+    }
+  }
+}

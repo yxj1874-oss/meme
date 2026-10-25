@@ -1,0 +1,155 @@
+{
+  "id": "g33_schema_v2_corpus",
+  "title": "Schema v2: 15 invalid scenes rejected with exact code and path",
+  "covers": [
+    "contract.schema"
+  ],
+  "kills": [
+    "light-inside-check",
+    "v2-error-mapping"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "reject_corpus",
+      "cases": [
+        {
+          "file": "invalid/metallic_over_one.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/materials/m/metallic"
+            }
+          ]
+        },
+        {
+          "file": "invalid/roughness_negative.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/materials/m/roughness"
+            }
+          ]
+        },
+        {
+          "file": "invalid/ior_below_one.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/materials/m/ior"
+            }
+          ]
+        },
+        {
+          "file": "invalid/ior_over_three.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/materials/m/ior"
+            }
+          ]
+        },
+        {
+          "file": "invalid/intensity_negative.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/lights/l/intensity_cd"
+            }
+          ]
+        },
+        {
+          "file": "invalid/light_type_spot.json",
+          "expect": [
+            {
+              "code": "E_VARIANT",
+              "path": "/lights/l/type"
+            }
+          ]
+        },
+        {
+          "file": "invalid/light_missing_color.json",
+          "expect": [
+            {
+              "code": "E_REQUIRED",
+              "path": "/lights/l"
+            }
+          ]
+        },
+        {
+          "file": "invalid/light_inside_sphere.json",
+          "expect": [
+            {
+              "code": "E_LIGHT_INSIDE",
+              "path": "/lights/l"
+            }
+          ]
+        },
+        {
+          "file": "invalid/light_black.json",
+          "expect": [
+            {
+              "code": "E_COLOR_LUMINANCE",
+              "path": "/lights/l"
+            }
+          ]
+        },
+        {
+          "file": "invalid/light_id_uppercase.json",
+          "expect": [
+            {
+              "code": "E_PATTERN",
+              "path": "/lights"
+            }
+          ]
+        },
+        {
+          "file": "invalid/too_many_lights.json",
+          "expect": [
+            {
+              "code": "E_TOO_MANY",
+              "path": "/lights"
+            }
+          ]
+        },
+        {
+          "file": "invalid/strategy_unknown.json",
+          "expect": [
+            {
+              "code": "E_ENUM",
+              "path": "/render/strategy"
+            }
+          ]
+        },
+        {
+          "file": "invalid/integrator_v1_in_v2.json",
+          "expect": [
+            {
+              "code": "E_ENUM",
+              "path": "/render/integrator"
+            }
+          ]
+        },
+        {
+          "file": "invalid/budget_doubles_with_mis.json",
+          "expect": [
+            {
+              "code": "E_BUDGET",
+              "path": "/render"
+            }
+          ]
+        },
+        {
+          "file": "invalid/light_id_collision.json",
+          "expect": [
+            {
+              "code": "E_ID_HASH_COLLISION",
+              "path": "/lights"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

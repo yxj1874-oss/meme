@@ -18,7 +18,7 @@
 ## ② 测试先行
 
 - 20 个黄金场景、137 条断言结果，全部由 [`tools/gen_golden.ts`](../tools/gen_golden.ts) 从一份代码生成；CI 检查生成结果与提交文件一致。
-- 41 条容忍度全部带推导与出处，锁在 [`golden/p0/thresholds.lock`](../golden/p0/thresholds.lock)。
+- 41 条容忍度全部带推导与出处，锁在阈值锁里（P1 起 p0、p1 共用 [`golden/thresholds.lock`](../golden/thresholds.lock)）。
 - 外部裁判：Random123 Philox KAT（6 条）、RFC 8785 附录 B（24 条数字样例 + §3.2.3 示例）、json-patch-tests（Apache 2.0，已入库 `test/vendor/`）、FNV-1a 规范测试向量、卡方分布临界值表。
 - 元测试：MT1 schema lint、MT2 变异（27 条）、MT3 性能门、MT4 本地 = CI（哈希比较）、MT5 阈值锁。
 

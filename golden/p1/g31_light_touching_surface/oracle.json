@@ -1,0 +1,72 @@
+{
+  "id": "g31_light_touching_surface",
+  "title": "A sphere light resting on a plane and a point light 1 mm above it: finite, bounded, and on the closed form",
+  "covers": [
+    "extreme.light_touching",
+    "nee.sphere",
+    "nee.point"
+  ],
+  "kills": [
+    "cone-at-contact",
+    "r2-guard"
+  ],
+  "runs": [
+    {
+      "name": "sphere",
+      "scene": "scene_sphere.json"
+    },
+    {
+      "name": "point",
+      "scene": "scene_point.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "validators_pass",
+      "run": "sphere"
+    },
+    {
+      "id": "A2",
+      "kind": "replay_stat",
+      "run": "sphere",
+      "replay": "sphere_light_plane",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "groups": 8,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "as G26; touching sphere: cos(theta) = R / d = sin(alpha), the sphere sits exactly on the horizon and the closed form still holds",
+        "source": "sphere view factor; CLT"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "validators_pass",
+      "run": "point"
+    },
+    {
+      "id": "A4",
+      "kind": "replay_exact",
+      "run": "point",
+      "replay": "point_light_direct",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ]
+      },
+      "min_pixels": 2000,
+      "rel": 0.0001,
+      "tol": {
+        "value": 0.000001,
+        "derivation": "rel: camera-relative f32 points within 2 cm carry ~16 ulp(0.02) = 3e-8 m error against r >= 1e-3 m -> 3e-5 on r^2, margin x3",
+        "source": "f64 replay; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+      }
+    }
+  ]
+}

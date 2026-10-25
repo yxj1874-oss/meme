@@ -1,4 +1,4 @@
-// meme golden verify [gid ...]   run every oracle; compare output hashes with expected.json when the
+// meme golden verify [gid|set ...]  run every oracle (all sets under golden/, or the named ones); compare output hashes with expected.json when the
 //                                substrate matches (L2), otherwise report the hash check as skipped (L3)
 // meme golden rebase [gid ...]   same, then write expected.json; refuses while any assertion fails, so
 //                                a golden can never be re-baselined onto a broken state
@@ -20,16 +20,16 @@ import { fingerprint, substrateId } from "../gpu/substrate.ts";
 import { type Context, evaluate, type Result } from "../oracle/assertions.ts";
 import { DEFAULT_PLAN, type ExecutionPlan } from "../runtime/plan.ts";
 import { type RunOptions, runScene } from "../runtime/run.ts";
+import { allGoldens, ROOT } from "./golden_sets.ts";
 
-const ROOT = fileURLToPath(new URL("../../", import.meta.url));
-const P0 = join(ROOT, "golden", "p0");
 const CLI = fileURLToPath(new URL("../cli.ts", import.meta.url));
 
 interface RunSpec {
   name: string;
   scene: string;
   plan?: Partial<ExecutionPlan>;
-  faults?: Omit<RunOptions, "plan">;
+  faults?: Omit<RunOptions, "plan" | "candidates">;
+  candidates?: RunOptions["candidates"];
   patches?: string[];
 }
 
@@ -65,21 +65,20 @@ export async function verifyGoldens(ids: string[], requireHashes = false, log: (
   const gpu = await openGpu();
   const substrate = await fingerprint(gpu);
   const sid = substrateId(substrate);
-  const all = readdirSync(P0, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
-  const selected = ids.length > 0 ? all.filter((g) => ids.some((i) => g === i || g.startsWith(`${i}_`))) : all;
+  const all = allGoldens();
+  const selected = ids.length > 0 ? all.filter((g) => ids.some((i) => g.id === i || g.id.startsWith(`${i}_`) || g.set === i)) : all;
   const reports: GoldenReport[] = [];
   const outputs = new Map<string, Record<string, Record<string, string>>>();
   log(`substrate ${sid} (${substrate.adapter.description})`);
 
-  for (const gid of selected) {
-    const dir = join(P0, gid);
+  for (const { id: gid, dir } of selected) {
     const oracle = JSON.parse(readFileSync(join(dir, "oracle.json"), "utf8")) as Oracle;
     const ctx: Context = { root: ROOT, dir, gpu, cli: CLI, runs: new Map() };
     const results: Result[] = [];
     try {
       for (const spec of oracle.runs) {
         const loaded = loadRunScene(dir, spec);
-        const options: RunOptions = { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}) };
+        const options: RunOptions = { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}), ...(spec.candidates ? { candidates: spec.candidates } : {}) };
         ctx.runs.set(spec.name, { loaded, output: await runScene(gpu, loaded, substrate, options) });
       }
       for (const a of oracle.asserts) results.push(...(await evaluate(ctx, a)));
@@ -141,10 +140,11 @@ export async function cmdGolden(args: string[]): Promise<number> {
       console.error(`refusing to rebase: ${assertionFailures.map((r) => r.id).join(", ")} fail their oracles`);
       return 6;
     }
+    const dirs = new Map(allGoldens().map((g) => [g.id, g.dir]));
     for (const [gid, runs] of outputs) {
       if (Object.keys(runs).length === 0) continue;
       const expected: Expected = { substrate_id: substrate, runs };
-      writeFileSync(join(P0, gid, "expected.json"), `${JSON.stringify(expected, null, 2)}\n`);
+      writeFileSync(join(dirs.get(gid)!, "expected.json"), `${JSON.stringify(expected, null, 2)}\n`);
     }
     console.log(`rebased ${outputs.size} goldens on ${substrate}`);
     return 0;

@@ -1,0 +1,52 @@
+{
+  "set": "c_sphere_light",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "|z| of G26 against the view-factor closed form; floor 5",
+    "variance": "summed per-pixel variance on G26 + G27 floors",
+    "ms": "render of G26 + G27 (mis)",
+    "robustness": "share of 12 random sphere-light scenes (a third touching the floor) failing validators or |z| <= 5"
+  },
+  "scores": [
+    {
+      "candidate": "uniform cone",
+      "value": 0,
+      "loc": 16,
+      "error": 1.3123579204224738,
+      "errorFloor": 5,
+      "variance": 37333.55719047274,
+      "noise": {
+        "variance": 206.56367692990156,
+        "ms": 34.794124000000124
+      },
+      "ms": 109.12849899999992,
+      "failure_rate": 0,
+      "notes": [
+        "G26 z = 1.31",
+        "G26 variance 7.699e-1, G27 variance 3.733e+4"
+      ]
+    },
+    {
+      "candidate": "uniform area",
+      "value": 1,
+      "loc": 25,
+      "error": 1.7879089757680495,
+      "errorFloor": 5,
+      "variance": null,
+      "noise": {
+        "variance": null,
+        "ms": 24.188167000001158
+      },
+      "ms": 114.41104200000018,
+      "failure_rate": 0.08333333333333333,
+      "notes": [
+        "G26 z = 1.79",
+        "G26 variance 2.051e+2, G27 variance NaN",
+        "variance is not finite (non-finite pixels or estimates): scored as infinity"
+      ]
+    }
+  ],
+  "pareto": [
+    "uniform cone"
+  ]
+}

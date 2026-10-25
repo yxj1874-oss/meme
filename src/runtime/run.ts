@@ -10,16 +10,18 @@ import type { Gpu } from "../gpu/device.ts";
 import { type Substrate, substrateId } from "../gpu/substrate.ts";
 import { encodePfm } from "../io/pfm.ts";
 import { encodePngRgb8, toDisplayRgb8 } from "../io/png.ts";
-import { checkEnergy, energyBound, roundingFactor, scanNonFinite } from "../oracle/validators.ts";
+import { checkEnergy, checkEnergyStatistical, energyBound, energyMode, roundingFactor, scanNonFinite } from "../oracle/validators.ts";
 import { codeHash } from "./identity.ts";
 import { decodeBodies, type PhysicsFaults, type PhysicsResult, simulate } from "./physics.ts";
 import { DEFAULT_PLAN, type ExecutionPlan, planHash } from "./plan.ts";
-import { type RenderFaults, type RenderResult, renderScene } from "./render.ts";
+import { type RenderCandidates, type RenderFaults, type RenderResult, renderScene } from "./render.ts";
 
 export interface RunOptions {
   plan?: ExecutionPlan;
   renderFaults?: RenderFaults;
   physicsFaults?: PhysicsFaults;
+  /** Candidate kernels for the P1 contests (test tooling). */
+  candidates?: RenderCandidates;
 }
 
 export interface ValidatorReport {
@@ -34,7 +36,7 @@ export interface Manifest {
   deterministic: {
     outputs: Record<string, string>;
     metrics: Record<string, unknown>;
-    work: { rays: number; isect_tests: number; physics_steps: number; gpu_bytes_peak: number };
+    work: { rays: number; shadow_rays: number; isect_tests: number; physics_steps: number; gpu_bytes_peak: number };
     validators: ValidatorReport[];
   };
   perf: { wall_ms: number };
@@ -98,7 +100,7 @@ export async function runScene(gpu: Gpu, loaded: LoadedScene, substrate: Substra
   }
 
   if (scene.render !== undefined) {
-    render = await renderScene(gpu, scene, plan, options.renderFaults);
+    render = await renderScene(gpu, scene, plan, options.renderFaults, options.candidates);
     const { width: W, height: H } = render;
     files.set("image.linear.pfm", encodePfm(W, H, render.mean));
     files.set("aov.m2.pfm", encodePfm(W, H, render.m2));
@@ -112,9 +114,15 @@ export async function runScene(gpu: Gpu, loaded: LoadedScene, substrate: Substra
       pass: scan.count === 0 && scanM2.count === 0,
       detail: { count: scan.count + scanM2.count, first: scan.first.map((h) => ({ x: Math.floor(h.index / 3) % W, y: Math.floor(h.index / 3 / W), c: h.index % 3, kind: h.kind })) },
     });
-    const bound = energyBound(scene);
-    const over = checkEnergy(render.mean, bound, roundingFactor(render.spp, scene.render.max_bounces));
-    validators.push({ name: "energy.image", pass: over.length === 0, detail: { bound, violations: over.map((o) => ({ ...o, value: finiteOr(o.value) })) } });
+    const mode = energyMode(scene);
+    if (mode === "not_applicable") {
+      validators.push({ name: "energy.image", pass: true, detail: { mode, reason: "point lights: radiance next to a point light has no finite bound" } });
+    } else {
+      const bound = energyBound(scene);
+      const factor = roundingFactor(render.spp, scene.render.max_bounces);
+      const over = mode === "per_sample" ? checkEnergy(render.mean, bound, factor) : checkEnergyStatistical(render.mean, render.m2, render.spp, bound, factor);
+      validators.push({ name: "energy.image", pass: over.length === 0, detail: { mode, bound, violations: over.map((o) => ({ ...o, value: finiteOr(o.value), bound: finiteOr(o.bound) })) } });
+    }
 
     const mean = [0, 0, 0];
     const max = [0, 0, 0];
@@ -125,6 +133,7 @@ export async function runScene(gpu: Gpu, loaded: LoadedScene, substrate: Substra
       max[i % 3] = Math.max(max[i % 3]!, v);
     }
     metrics["image"] = { width: W, height: H, spp: render.spp, mean: mean.map((s) => s / (W * H)), max, nonfinite: scan.count };
+    metrics["lighting"] = { strategy: scene.render.strategy ?? "mis", lights: render.lightCount, specular_lobe_choices: render.specularChoices, nee_share: render.neeShare };
   }
 
   const outputs: Record<string, string> = {};
@@ -132,7 +141,7 @@ export async function runScene(gpu: Gpu, loaded: LoadedScene, substrate: Substra
   const deterministic: Manifest["deterministic"] = {
     outputs,
     metrics,
-    work: { rays: render?.segments ?? 0, isect_tests: render?.isectTests ?? 0, physics_steps: physicsSteps, gpu_bytes_peak: gpu.bytesPeak },
+    work: { rays: render?.segments ?? 0, shadow_rays: render?.shadowRays ?? 0, isect_tests: render?.isectTests ?? 0, physics_steps: physicsSteps, gpu_bytes_peak: gpu.bytesPeak },
     validators,
   };
   files.set("metrics.json", new TextEncoder().encode(jcs(deterministic)));

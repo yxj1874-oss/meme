@@ -9,13 +9,13 @@ function read(name: string): string {
 }
 
 const PRELUDE: Record<string, string[]> = {
-  render_p0: ["rng.wgsl", "bsdf_lambert.wgsl"],
-  probe_bsdf: ["rng.wgsl", "bsdf_lambert.wgsl"],
+  render_p1: ["rng.wgsl", "bsdf_lambert.wgsl", "bsdf_p1.wgsl"],
+  probe_bsdf: ["rng.wgsl", "bsdf_lambert.wgsl", "bsdf_p1.wgsl"],
   rng_check: ["rng.wgsl"],
   physics_p0: [],
   probe_fbh: [],
 };
 
-export function kernelSource(name: "render_p0" | "physics_p0" | "rng_check" | "probe_bsdf" | "probe_fbh"): string {
+export function kernelSource(name: "render_p1" | "physics_p0" | "rng_check" | "probe_bsdf" | "probe_fbh"): string {
   return [...PRELUDE[name]!, `${name}.wgsl`].map(read).join("\n");
 }

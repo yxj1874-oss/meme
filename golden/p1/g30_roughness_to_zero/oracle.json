@@ -1,0 +1,59 @@
+{
+  "id": "g30_roughness_to_zero",
+  "title": "Roughness -> 0: the GGX image converges to the delta-lobe image as alpha falls to alpha_min",
+  "covers": [
+    "delta",
+    "continuity"
+  ],
+  "kills": [
+    "delta-fresnel-differs",
+    "alpha-min-threshold"
+  ],
+  "runs": [
+    {
+      "name": "a4e3",
+      "scene": "scene_a4e3.json"
+    },
+    {
+      "name": "a2e3",
+      "scene": "scene_a2e3.json"
+    },
+    {
+      "name": "a125e4",
+      "scene": "scene_a125e4.json"
+    },
+    {
+      "name": "delta",
+      "scene": "scene_delta.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "roughness_limit",
+      "runs": [
+        "a4e3",
+        "a2e3",
+        "a125e4"
+      ],
+      "delta": "delta",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "ratio_max": 0.5,
+      "tol": {
+        "value": 0.5,
+        "derivation": "lobe blur scales with alpha; alpha_last / alpha_first = 0.3125, so a continuous limit gives <= ~0.31 plus noise; a constant offset in the delta branch would not shrink",
+        "source": "continuity of GGX at alpha -> 0 (Walter et al. 2007)"
+      }
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "delta"
+    }
+  ]
+}

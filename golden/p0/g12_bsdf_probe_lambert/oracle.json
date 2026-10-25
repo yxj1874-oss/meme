@@ -29,8 +29,30 @@
       "k": 5,
       "tol": {
         "value": null,
-        "derivation": "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4",
+        "derivation": "5 sigma (Bonferroni over 768 direction x channel tests)",
         "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "weight_rel": {
+          "value": 9.5367431640625e-7,
+          "derivation": "the sampler weight is the albedo in exact arithmetic; sample and recompute differ by a few roundings of rho / pi and cos / pdf: 8u",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_per_max_f": {
+          "value": 2.384185791015625e-7,
+          "derivation": "f = rho / pi does not depend on the directions, so f(wo, wi) and f(wi, wo) run identical operations: 2^-22 of max f leaves room for one differently fused multiply",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 4.76837158203125e-7,
+          "derivation": "| |wi| - 1 | of the unnormalized cosine sample (r cos phi, r sin phi, sqrt(1 - r^2)) with sin / cos to ~1 ulp as on the reference substrate; WGSL only guarantees 2^-11 absolute for sin / cos (§15.7.4.1), under which this bound would be 2^-10",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor: a correct sampler fails with probability 1e-4 per test, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
       }
     },
     {
@@ -50,8 +72,30 @@
       "k": 5,
       "tol": {
         "value": null,
-        "derivation": "5 sigma (Bonferroni over 768 direction x channel tests); weights within 8 ulp; reciprocity 2^-22 max f; chi-square p >= 1e-4",
+        "derivation": "5 sigma (Bonferroni over 768 direction x channel tests)",
         "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test; Mitsuba 3 chi2; Veach 1997 ch. 6"
+      },
+      "bounds": {
+        "weight_rel": {
+          "value": 9.5367431640625e-7,
+          "derivation": "the sampler weight is the albedo in exact arithmetic; sample and recompute differ by a few roundings of rho / pi and cos / pdf: 8u",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "reciprocity_per_max_f": {
+          "value": 2.384185791015625e-7,
+          "derivation": "f = rho / pi does not depend on the directions, so f(wo, wi) and f(wi, wo) run identical operations: 2^-22 of max f leaves room for one differently fused multiply",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "length": {
+          "value": 4.76837158203125e-7,
+          "derivation": "| |wi| - 1 | of the unnormalized cosine sample (r cos phi, r sin phi, sqrt(1 - r^2)) with sin / cos to ~1 ulp as on the reference substrate; WGSL only guarantees 2^-11 absolute for sin / cos (§15.7.4.1), under which this bound would be 2^-10",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "chi2_p": {
+          "value": 0.0001,
+          "derivation": "chi-square p-value floor: a correct sampler fails with probability 1e-4 per test, deterministic under the fixed seed",
+          "source": "pbrt-v3 src/tests/bsdfs.cpp chi2 test"
+        }
       }
     }
   ]

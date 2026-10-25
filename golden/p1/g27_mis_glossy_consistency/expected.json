@@ -1,0 +1,29 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "bsdf": {
+      "aov.id.u32": "sha256:93dce84420aac853549515fb7f08e62008cdc1939c6cf784dc11ea416e30a841",
+      "aov.m2.pfm": "sha256:6a9f207f55f38769c460a68d1249fee9f615af31935b0776f4e9704e2a208b45",
+      "image.linear.pfm": "sha256:39d4fc4fb59096915bb72caa1e18c3a8ed1fac20ecf1631e13ae3fc9e686e996",
+      "image.png": "sha256:061d967430f61c5046f004097601ce23c035454fe447bed739cb1acd0bc38c77"
+    },
+    "nee": {
+      "aov.id.u32": "sha256:93dce84420aac853549515fb7f08e62008cdc1939c6cf784dc11ea416e30a841",
+      "aov.m2.pfm": "sha256:3d064250415d4fb441102d01bdca8e3d9cae2bdb374471f864fe96629d2fdc61",
+      "image.linear.pfm": "sha256:cf35584c92bee2a97e4625bc3e2ba27c9230bb02cfb7262cf13ec29ec54f13cf",
+      "image.png": "sha256:d0a548001850f34bc5d70715aa6a7dcd8fcaf8379ebb13498da3d78e4eb479b4"
+    },
+    "mis": {
+      "aov.id.u32": "sha256:93dce84420aac853549515fb7f08e62008cdc1939c6cf784dc11ea416e30a841",
+      "aov.m2.pfm": "sha256:9aded4c86e47d424ce0b0347e6d19bc98412e5c32831543a10bb06d1701fa5b2",
+      "image.linear.pfm": "sha256:daede2889872c5c3489dba091c6e1e2b3946df94da528bad4a9b4c608dd23528",
+      "image.png": "sha256:836f4f4fc839f3204f3e62b0bdf457f7b5e1a2a08479b330109e87901e6c7f83"
+    },
+    "power": {
+      "aov.id.u32": "sha256:93dce84420aac853549515fb7f08e62008cdc1939c6cf784dc11ea416e30a841",
+      "aov.m2.pfm": "sha256:962a67df2c9a6246aa74f78fbb599ad69b9b1de2c4af4ff765b883e4d566b21a",
+      "image.linear.pfm": "sha256:af2894b1b9528a2877ace20ef513e96f83e90312932f25cc7c2bc32ab38da124",
+      "image.png": "sha256:8d0be474b18b882595c88a85c90fec7c87df4876edaa7a0c06cf170d49937fbe"
+    }
+  }
+}

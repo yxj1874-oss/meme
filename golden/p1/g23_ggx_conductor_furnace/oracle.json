@@ -1,0 +1,103 @@
+{
+  "id": "g23_ggx_conductor_furnace",
+  "title": "GGX conductor (F0 = 1) white furnace: pixels match the single-scattering albedo E_ss(mu, alpha), not 1",
+  "covers": [
+    "energy.furnace",
+    "ggx",
+    "mis.env"
+  ],
+  "kills": [
+    "g2-as-g1",
+    "ggx-d-alpha",
+    "vndf-pdf",
+    "mis-env-weight"
+  ],
+  "runs": [
+    {
+      "name": "r03",
+      "scene": "scene_r03.json"
+    },
+    {
+      "name": "r06",
+      "scene": "scene_r06.json"
+    },
+    {
+      "name": "r10",
+      "scene": "scene_r10.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.r03",
+      "kind": "replay_stat",
+      "run": "r03",
+      "replay": "ggx_furnace",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "groups": 16,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group of pixels (16 groups by expected value): |sum(I - E)| <= 5 sqrt(sum var_p / N); E from adaptive Simpson in the VNDF domain (agrees with an independent slope-space integral to 1e-7), linearly interpolated on a 129-point mu grid: <= 4e-5 for mu >= 0.15, and every sample of the 1-px eroded mask has mu >= 0.18 (sphere radius 53 px), against 5 sigma ~ 2e-3 per group",
+        "source": "Heitz 2014 G2 / Heitz 2018 VNDF; CLT with per-pixel variance from m2; Bonferroni over 48 tests"
+      }
+    },
+    {
+      "id": "V.r03",
+      "kind": "validators_pass",
+      "run": "r03"
+    },
+    {
+      "id": "A1.r06",
+      "kind": "replay_stat",
+      "run": "r06",
+      "replay": "ggx_furnace",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "groups": 16,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group of pixels (16 groups by expected value): |sum(I - E)| <= 5 sqrt(sum var_p / N); E from adaptive Simpson in the VNDF domain (agrees with an independent slope-space integral to 1e-7), linearly interpolated on a 129-point mu grid: <= 4e-5 for mu >= 0.15, and every sample of the 1-px eroded mask has mu >= 0.18 (sphere radius 53 px), against 5 sigma ~ 2e-3 per group",
+        "source": "Heitz 2014 G2 / Heitz 2018 VNDF; CLT with per-pixel variance from m2; Bonferroni over 48 tests"
+      }
+    },
+    {
+      "id": "V.r06",
+      "kind": "validators_pass",
+      "run": "r06"
+    },
+    {
+      "id": "A1.r10",
+      "kind": "replay_stat",
+      "run": "r10",
+      "replay": "ggx_furnace",
+      "mask": {
+        "ids_in": [
+          "ball"
+        ],
+        "erode_px": 1
+      },
+      "groups": 16,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group of pixels (16 groups by expected value): |sum(I - E)| <= 5 sqrt(sum var_p / N); E from adaptive Simpson in the VNDF domain (agrees with an independent slope-space integral to 1e-7), linearly interpolated on a 129-point mu grid: <= 4e-5 for mu >= 0.15, and every sample of the 1-px eroded mask has mu >= 0.18 (sphere radius 53 px), against 5 sigma ~ 2e-3 per group",
+        "source": "Heitz 2014 G2 / Heitz 2018 VNDF; CLT with per-pixel variance from m2; Bonferroni over 48 tests"
+      }
+    },
+    {
+      "id": "V.r10",
+      "kind": "validators_pass",
+      "run": "r10"
+    }
+  ]
+}

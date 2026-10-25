@@ -1,0 +1,86 @@
+{
+  "id": "g29_mis_convergence_slope",
+  "title": "MIS on the sphere light: RMSE against the closed form falls as N^-1/2 with the right constant",
+  "covers": [
+    "convergence",
+    "mis"
+  ],
+  "kills": [
+    "sample-index-not-in-nee-counter",
+    "nee-dims-reused"
+  ],
+  "runs": [
+    {
+      "name": "n1",
+      "scene": "scene_n1.json"
+    },
+    {
+      "name": "n4",
+      "scene": "scene_n4.json"
+    },
+    {
+      "name": "n16",
+      "scene": "scene_n16.json"
+    },
+    {
+      "name": "n64",
+      "scene": "scene_n64.json"
+    },
+    {
+      "name": "n256",
+      "scene": "scene_n256.json"
+    },
+    {
+      "name": "n1024",
+      "scene": "scene_n1024.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1-A2",
+      "kind": "convergence",
+      "runs": [
+        "n1",
+        "n4",
+        "n16",
+        "n64",
+        "n256",
+        "n1024"
+      ],
+      "spp": [
+        1,
+        4,
+        16,
+        64,
+        256,
+        1024
+      ],
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "expect": {
+        "replay": "sphere_light_plane"
+      },
+      "sigma": {
+        "from_run_m2": "n1024"
+      },
+      "slope": [
+        -0.55,
+        -0.45
+      ],
+      "calibration": [
+        0.85,
+        1.15
+      ],
+      "calibration_min_spp": 4,
+      "tol": {
+        "value": 0.05,
+        "derivation": "slope as G11; calibration +-15%: sigma itself is estimated from the N = 1024 run (relative sd ~ sqrt(kappa/(4 P N)) small) and RMSE from ~600 pixels (relative sd <= 3%) -> about 5 sd",
+        "source": "OLS slope variance; G11"
+      }
+    }
+  ]
+}

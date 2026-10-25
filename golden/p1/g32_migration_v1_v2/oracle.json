@@ -1,0 +1,40 @@
+{
+  "id": "g32_migration_v1_v2",
+  "title": "Every p0 run, migrated to v2 and rendered by the P1 kernel, reproduces its P0 bytes; migrations round-trip; lossy rollbacks are refused",
+  "covers": [
+    "contract.migration",
+    "regression"
+  ],
+  "kills": [
+    "lambert-path-changed",
+    "migration-defaults",
+    "rollback-not-lossy"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "p0_byte_identity",
+      "snapshot": "p0_snapshot.json"
+    },
+    {
+      "id": "A2",
+      "kind": "migration_roundtrip"
+    },
+    {
+      "id": "A3",
+      "kind": "rollback_lossy",
+      "cases": [
+        {
+          "file": "lossy.json",
+          "expect": [
+            "E_ROLLBACK_LOSSY@/lights/key",
+            "E_ROLLBACK_LOSSY@/materials/a/metallic",
+            "E_ROLLBACK_LOSSY@/materials/b/ior",
+            "E_ROLLBACK_LOSSY@/render/strategy"
+          ]
+        }
+      ]
+    }
+  ]
+}

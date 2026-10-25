@@ -1,0 +1,155 @@
+{
+  "id": "g26_sphere_light_lambert_plane",
+  "title": "Sphere light over a Lambert plane: all estimators unbiased against the view-factor closed form; balance MIS (the default) within Veach's bound",
+  "covers": [
+    "nee.sphere",
+    "mis",
+    "unbiasedness"
+  ],
+  "kills": [
+    "cone-pdf",
+    "mis-weight-swap",
+    "nee-bsdf-double-count",
+    "light-select-unnormalized"
+  ],
+  "runs": [
+    {
+      "name": "bsdf",
+      "scene": "scene_bsdf.json"
+    },
+    {
+      "name": "nee",
+      "scene": "scene_nee.json"
+    },
+    {
+      "name": "mis",
+      "scene": "scene_mis.json"
+    },
+    {
+      "name": "power",
+      "scene": "scene_mis.json",
+      "candidates": {
+        "MIS_HEURISTIC": 0
+      }
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.bsdf",
+      "kind": "replay_stat",
+      "run": "bsdf",
+      "replay": "sphere_light_plane",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "groups": 8,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group: |sum(I - E)| <= 5 sqrt(sum var_p / N), 8 groups x 3 channels",
+        "source": "sphere view factor E = pi L (R/d)^2 cos(theta); CLT; Bonferroni"
+      }
+    },
+    {
+      "id": "A1.nee",
+      "kind": "replay_stat",
+      "run": "nee",
+      "replay": "sphere_light_plane",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "groups": 8,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group: |sum(I - E)| <= 5 sqrt(sum var_p / N), 8 groups x 3 channels",
+        "source": "sphere view factor E = pi L (R/d)^2 cos(theta); CLT; Bonferroni"
+      }
+    },
+    {
+      "id": "A1.mis",
+      "kind": "replay_stat",
+      "run": "mis",
+      "replay": "sphere_light_plane",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "groups": 8,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group: |sum(I - E)| <= 5 sqrt(sum var_p / N), 8 groups x 3 channels",
+        "source": "sphere view factor E = pi L (R/d)^2 cos(theta); CLT; Bonferroni"
+      }
+    },
+    {
+      "id": "A1.power",
+      "kind": "replay_stat",
+      "run": "power",
+      "replay": "sphere_light_plane",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "groups": 8,
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "per group: |sum(I - E)| <= 5 sqrt(sum var_p / N), 8 groups x 3 channels",
+        "source": "sphere view factor E = pi L (R/d)^2 cos(theta); CLT; Bonferroni"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "strategies_agree",
+      "runs": [
+        "bsdf",
+        "nee",
+        "mis",
+        "power"
+      ],
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "pairwise aggregate z over the floor pixels",
+        "source": "unbiasedness of every estimator"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "mis_variance_bound",
+      "balance": "mis",
+      "bsdf": "bsdf",
+      "nee": "nee",
+      "mask": {
+        "ids_in": [
+          "floor"
+        ],
+        "erode_px": 1
+      },
+      "k": 5,
+      "tol": {
+        "value": null,
+        "derivation": "sum_p var_balance <= sum_p (min(var_bsdf, var_nee) + mu^2 / 2) * (1 + 5 sqrt(2 / ((N-1) P)))",
+        "source": "Veach 1997 Theorem 9.2 with one sample per technique"
+      }
+    }
+  ]
+}

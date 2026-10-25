@@ -1,0 +1,36 @@
+{
+  "v": 3,
+  "seed": 2020,
+  "physics": {
+    "integrator": "xpbd_unconstrained_p0",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.01,
+    "steps": 10,
+    "record_every_steps": 5
+  },
+  "materials": {
+    "m": {
+      "base_color": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "objects": {
+    "a": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        1
+      ],
+      "radius_m": 1,
+      "material": "m"
+    }
+  }
+}
