@@ -24,7 +24,7 @@ import { exitCodeFor, type RunOptions, runScene } from "./runtime/run.ts";
 import { compareRuns, determinismCheck } from "./tools/determinism.ts";
 import { writeRun } from "./tools/io.ts";
 
-export const EXIT = { OK: 0, USAGE: 1, CONTRACT: 2, NONDETERMINISM: 3, NONFINITE: 4, ENERGY: 5, ORACLE: 6 } as const;
+export const EXIT = { OK: 0, USAGE: 1, CONTRACT: 2, NONDETERMINISM: 3, NONFINITE: 4, ENERGY: 5, ORACLE: 6, PHYSICS_LIMIT: 7 } as const;
 
 const CLI = fileURLToPath(import.meta.url);
 

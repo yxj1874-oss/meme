@@ -1,0 +1,53 @@
+{
+  "substrate_id": "sha256:9e7171cb4c177eeeddfc1a8a54c993d37909e14149d1939582e96ddae15f4fe7",
+  "runs": {
+    "m1_e10": {
+      "state/step_000000.bin": "sha256:cd13f19383b6497a9422fb716592dd05bcc9118fb8eba6c42c646efb84783b82",
+      "state/step_000000.json": "sha256:1ef60763645aea50453dc96a5f74cd5ab70c1bcc9d778656dd1d0e3a97c41ec7",
+      "state/step_000000.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab",
+      "state/step_000250.bin": "sha256:c3528de84b639bbe764c3c8758cb250a2d40212da258c91d666a17a5dc3d1cf4",
+      "state/step_000250.json": "sha256:aa309d237867f5ad57fc8422b73e1dc9867cb491acfc9b72fae23c903922faa1",
+      "state/step_000250.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab"
+    },
+    "m3_e10": {
+      "state/step_000000.bin": "sha256:4f6d8f1f68fc335c280c1da61e0ae21377acc9e07514c107c49b9635a4d90936",
+      "state/step_000000.json": "sha256:1ef60763645aea50453dc96a5f74cd5ab70c1bcc9d778656dd1d0e3a97c41ec7",
+      "state/step_000000.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab",
+      "state/step_000250.bin": "sha256:b4eb9c387215f0f35dc6b4ff8dd5cb15e15b567997044f82349d65c756d66211",
+      "state/step_000250.json": "sha256:03fa6ec16c796035216fb09aa319cf06ce48d7a79943eb06e50eb7665e8a437c",
+      "state/step_000250.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab"
+    },
+    "m3_e5": {
+      "state/step_000000.bin": "sha256:4f6d8f1f68fc335c280c1da61e0ae21377acc9e07514c107c49b9635a4d90936",
+      "state/step_000000.json": "sha256:1ef60763645aea50453dc96a5f74cd5ab70c1bcc9d778656dd1d0e3a97c41ec7",
+      "state/step_000000.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab",
+      "state/step_000250.bin": "sha256:9f6048e2d5bccbaef4439bd5ca46317d306c70b975f3a5d5a24a089b3d5c9e7b",
+      "state/step_000250.json": "sha256:5735c64d3db994184d5a162eacab62250a8b32b3e0f240a925f96c9f9f6bf198",
+      "state/step_000250.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab"
+    },
+    "m100_e10": {
+      "state/step_000000.bin": "sha256:faef4b311ac4a4fbcedbed535fe2b9e5e4341ccae3d697b2ab5efaff472bbf87",
+      "state/step_000000.json": "sha256:1ef60763645aea50453dc96a5f74cd5ab70c1bcc9d778656dd1d0e3a97c41ec7",
+      "state/step_000000.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab",
+      "state/step_000250.bin": "sha256:f00bc17286e8b684fd2b1301db04d23b78b57e3f90c28c936ff9055ae50460e1",
+      "state/step_000250.json": "sha256:607ca6b51e31607926d88ffe8ecaea7d6ab03ed75d95a22cf73b1211f20646a6",
+      "state/step_000250.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab"
+    },
+    "m100_e5": {
+      "state/step_000000.bin": "sha256:faef4b311ac4a4fbcedbed535fe2b9e5e4341ccae3d697b2ab5efaff472bbf87",
+      "state/step_000000.json": "sha256:1ef60763645aea50453dc96a5f74cd5ab70c1bcc9d778656dd1d0e3a97c41ec7",
+      "state/step_000000.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab",
+      "state/step_000250.bin": "sha256:7d5c8ceb2aa39f53900e1b1180b193b8e5c8cea3a7eef1c45275124c627fc46f",
+      "state/step_000250.json": "sha256:7016c7885268e162a19608e3d720e912a5079735baff370ff7f3613ec0a2e946",
+      "state/step_000250.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab"
+    },
+    "oblique": {
+      "state/step_000000.bin": "sha256:181f15521bd803e20471707ea9824ce84e4ffcabcdbbe6591000a19307ba7405",
+      "state/step_000000.json": "sha256:b94471de572e9b96e31aea901a5237b4be5dfeab237b026b2a891a10d8528a81",
+      "state/step_000000.rot.bin": "sha256:3455fb402e649b1f410e7a85d012c13a60d9551b46a6894199299a9c0ec24bab",
+      "state/step_000250.bin": "sha256:f7d556628efb436edd1df17f410723f4bdf5cd94b553909bf05713977ac30d78",
+      "state/step_000250.json": "sha256:0a7cce9a4c019a46d62beffb6d453c1adb80c430544927b142f93d19f30183ff",
+      "state/step_000250.rot.bin": "sha256:e5fe838d6635fab446074650868932a99ed48c1046dbdb95e9f26bc3e73c57b0"
+    }
+  }
+}

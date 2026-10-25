@@ -14,10 +14,10 @@
     "lint": "node tools/lint.ts",
     "typecheck": "tsc --noEmit -p .",
     "test": "node --test --test-reporter=spec \"test/**/*.test.ts\"",
-    "golden:check-generated": "node tools/gen_golden.ts --check && node tools/gen_golden_p1.ts --check && node tools/gen_tables.ts --check",
+    "golden:check-generated": "node tools/gen_golden.ts --check && node tools/gen_golden_p1.ts --check && node tools/gen_golden_p2.ts --check && node tools/gen_tables.ts --check",
     "thresholds": "node tools/thresholds.ts --check",
     "golden": "node src/cli.ts golden verify --require-hashes",
-    "determinism": "node src/cli.ts determinism-check golden/p0/g01_det_double_run/scene.json golden/p0/g03_det_plan_invariance/scene.json golden/p0/g16_physics_extremes/scene_far.json golden/p1/g34_det_plan_invariance_p1/scene.json",
+    "determinism": "node src/cli.ts determinism-check golden/p0/g01_det_double_run/scene.json golden/p0/g03_det_plan_invariance/scene.json golden/p0/g16_physics_extremes/scene_far.json golden/p1/g34_det_plan_invariance_p1/scene.json golden/p2/g45_det_plan_invariance_p2/scene.json",
     "perf": "node --expose-gc tools/perf.ts --check --require-baseline --base out/perf-base",
     "mutants": "node tools/mutate.ts",
     "ci": "npm run lint && npm run typecheck && npm test && npm run golden:check-generated && npm run thresholds && npm run golden && npm run determinism && npm run perf"

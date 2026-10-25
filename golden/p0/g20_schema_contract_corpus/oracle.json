@@ -241,7 +241,7 @@
           ]
         },
         {
-          "file": "invalid/version_3.json",
+          "file": "invalid/version_unknown.json",
           "expect": [
             {
               "code": "E_ENUM",

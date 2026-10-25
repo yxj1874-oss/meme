@@ -12,7 +12,7 @@ import { HarnessRng, philox4x32R, rng4, toUnitFloat } from "../core/rng.ts";
 import { type LoadedScene, loadSceneText, loadSceneValue } from "../core/scene.ts";
 import { parseStrict as parseStrictText } from "../core/json_strict.ts";
 import type { Scene, Vec3 } from "../core/scene_types.ts";
-import { sceneSchema, validateSceneSchema } from "../core/schema.ts";
+import { declaredVersion, sceneSchema, validateSceneSchema } from "../core/schema.ts";
 import { dot, luminanceY, norm } from "../core/vec.ts";
 import type { Gpu } from "../gpu/device.ts";
 import { decodePngStored } from "../io/png.ts";
@@ -29,49 +29,14 @@ import { migrateToLatest, rollbackTo } from "../core/migrate.ts";
 import { DEFAULT_PLAN } from "../runtime/plan.ts";
 import { runScene } from "../runtime/run.ts";
 import { fingerprint, substrateId } from "../gpu/substrate.ts";
-import { DEFAULT_CANDIDATES, kelemenTableBytes } from "../runtime/render.ts";
+import { DEFAULT_CANDIDATES, kelemenTableBytes, type RenderCandidates } from "../runtime/render.ts";
 import { sampleScene } from "./schema_sampler.ts";
 import { lintSchema } from "./schema_lint.ts";
+import { bound, type Context, type Kind, one, type Params, type Result, type Run, run } from "./assert_util.ts";
+import { P2_KINDS } from "./physics_assertions.ts";
 import { chiSquare, olsSlope, pearson } from "./stats.ts";
 
-export interface Result {
-  id: string;
-  pass: boolean;
-  measured?: unknown;
-  expected?: unknown;
-  detail?: unknown;
-}
-
-export interface Run {
-  loaded: LoadedScene;
-  output: RunOutput;
-}
-
-export interface Context {
-  root: string;
-  dir: string;
-  gpu: Gpu;
-  cli: string;
-  runs: Map<string, Run>;
-}
-
-type Params = Record<string, any>;
-
-/** A named bound from the assertion's `bounds` (locked by MT5 like `tol`). */
-function bound(a: Params, name: string): number {
-  const b = a["bounds"]?.[name] as { value: number } | undefined;
-  if (b === undefined || typeof b.value !== "number") throw new Error(`assertion ${a["id"]}: missing bound ${name}`);
-  return b.value;
-}
-type Kind = (ctx: Context, a: Params) => Promise<Result[]> | Result[];
-
-const one = (a: Params, pass: boolean, measured?: unknown, expected?: unknown, detail?: unknown): Result[] => [{ id: a["id"], pass, measured, expected, detail }];
-
-function run(ctx: Context, name: string): Run {
-  const r = ctx.runs.get(name);
-  if (r === undefined) throw new Error(`oracle refers to unknown run ${name}`);
-  return r;
-}
+export type { Context, Result, Run } from "./assert_util.ts";
 
 // ---------------------------------------------------------------------------------------------
 // Named closed forms (design §3.9: functions, not evaluated strings)
@@ -848,14 +813,15 @@ const P1_KINDS: Record<string, Kind> = {
     if (sid !== snap.substrate_id) return one(a, false, { skipped: `snapshot recorded on ${snap.substrate_id}; this is ${sid}` });
     const diffs: unknown[] = [];
     let files = 0;
-    for (const g of allGoldens(join(ctx.root, "golden")).filter((x) => x.set === "p0")) {
-      const oracle = JSON.parse(readFileSync(join(g.dir, "oracle.json"), "utf8")) as { runs: { name: string; scene: string; plan?: object; faults?: object; patches?: string[] }[] };
+    const sets = (a["sets"] as string[] | undefined) ?? ["p0"];
+    for (const g of allGoldens(join(ctx.root, "golden")).filter((x) => sets.includes(x.set))) {
+      const oracle = JSON.parse(readFileSync(join(g.dir, "oracle.json"), "utf8")) as { runs: { name: string; scene: string; plan?: object; faults?: object; patches?: string[]; candidates?: RenderCandidates }[] };
       for (const spec of oracle.runs) {
         const want = snap.goldens[g.id]?.[spec.name];
         if (want === undefined) continue;
         let loaded = loadSceneText(readFileSync(join(g.dir, spec.scene), "utf8"));
         for (const pth of spec.patches ?? []) loaded = applyScenePatch(loaded, { v: 1, base_scene_hash: loaded.scene_hash, ops: JSON.parse(readFileSync(join(g.dir, pth), "utf8")) } as unknown as Json);
-        const out = await runScene(ctx.gpu, loaded, substrate, { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}) });
+        const out = await runScene(ctx.gpu, loaded, substrate, { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}), ...(spec.candidates ? { candidates: spec.candidates } : {}) });
         for (const [file, hash] of Object.entries(want)) {
           files++;
           if (out.manifest.deterministic.outputs[file] !== hash) diffs.push({ golden: g.id, run: spec.name, file });
@@ -865,16 +831,19 @@ const P1_KINDS: Record<string, Kind> = {
     return one(a, diffs.length === 0 && files > 0, { files_compared: files, differing: diffs.slice(0, 20) });
   },
 
+  // Every scene of the named sets, from the version it declares: migrate -> rollback -> migrate is the identity.
   migration_roundtrip: (ctx, a) => {
     const failures: unknown[] = [];
     let count = 0;
-    for (const g of allGoldens(join(ctx.root, "golden")).filter((x) => x.set === "p0")) {
+    const sets = (a["sets"] as string[] | undefined) ?? ["p0"];
+    for (const g of allGoldens(join(ctx.root, "golden")).filter((x) => sets.includes(x.set))) {
       const oracle = JSON.parse(readFileSync(join(g.dir, "oracle.json"), "utf8")) as { runs: { scene: string }[] };
       for (const s of new Set(oracle.runs.map((r) => r.scene))) {
         count++;
-        const v1 = parseStrictText(readFileSync(join(g.dir, s), "utf8"));
-        const up = migrateToLatest(v1, 1).scene;
-        const again = migrateToLatest(rollbackTo(up, 1), 1).scene;
+        const scene = parseStrictText(readFileSync(join(g.dir, s), "utf8"));
+        const v = declaredVersion(scene);
+        const up = migrateToLatest(scene, v).scene;
+        const again = migrateToLatest(rollbackTo(up, v), v).scene;
         if (jcs(up) !== jcs(again)) failures.push(`${g.id}/${s}`);
       }
     }
@@ -886,7 +855,7 @@ const P1_KINDS: Record<string, Kind> = {
       const loaded = loadSceneText(readFileSync(join(ctx.dir, c["file"]), "utf8"));
       let got: unknown = "lossless";
       try {
-        rollbackTo(loaded.scene as unknown as Json, 1);
+        rollbackTo(loaded.scene as unknown as Json, (a["to_version"] as number | undefined) ?? 1);
       } catch (err) {
         if (!(err instanceof ContractViolation)) throw err;
         got = err.errors.map((e) => `${e.code}@${e.path}`);
@@ -970,7 +939,7 @@ function physicsCheck(ctx: Context, a: Params, mode: "trajectory" | "ke" | "drif
 }
 
 export async function evaluate(ctx: Context, a: Params): Promise<Result[]> {
-  const kind = KINDS[a["kind"]] ?? P1_KINDS[a["kind"]];
+  const kind = KINDS[a["kind"]] ?? P1_KINDS[a["kind"]] ?? P2_KINDS[a["kind"]];
   if (kind === undefined) throw new Error(`unknown assertion kind ${a["kind"]}`);
   return kind(ctx, a);
 }

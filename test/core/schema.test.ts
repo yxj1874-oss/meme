@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { MATERIAL_DEFAULTS } from "../../src/core/scene.ts";
+import { BODY_DEFAULTS, JOINT_DEFAULTS, MATERIAL_DEFAULTS, PHYSICS_MATERIAL_DEFAULTS } from "../../src/core/scene.ts";
 import { sceneSchema, validateSceneSchema } from "../../src/core/schema.ts";
 import { lintSchema } from "../../src/oracle/schema_lint.ts";
 
@@ -22,6 +22,11 @@ test("canonical defaults match the defaults declared in the schema", () => {
   const props = (sceneSchema["$defs"] as any).Material.properties;
   assert.deepEqual(props.emissive_cdm2.default, MATERIAL_DEFAULTS.emissive_cdm2);
   assert.deepEqual(props.emissive_color.default, MATERIAL_DEFAULTS.emissive_color);
+  const defs = sceneSchema["$defs"] as any;
+  for (const [k, v] of Object.entries(PHYSICS_MATERIAL_DEFAULTS)) assert.deepEqual(defs.PhysicsMaterial.properties[k].default, v, k);
+  for (const [k, v] of Object.entries(BODY_DEFAULTS)) assert.deepEqual(defs.Body.properties[k].default, v, k);
+  const distance = defs.Joint.oneOf.find((b: any) => b.properties.type.const === "distance");
+  assert.deepEqual(distance.properties.compliance_m_N.default, JOINT_DEFAULTS.compliance_m_N);
 });
 
 test("errors inside a oneOf are reported against the branch named by the discriminator", () => {

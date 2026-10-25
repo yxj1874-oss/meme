@@ -533,7 +533,7 @@ const invalid: [string, Mut | string, string, string][] = [
   ["env_black_color", (s) => Object.assign(s, withRender(), { environment: envConst(1, [0, 0, 0]) }), "E_COLOR_LUMINANCE", "/environment"],
   ["render_budget", (s) => Object.assign(s, withRender(), { render: render(4096, 4096, 65536, 256) }), "E_BUDGET", "/render"],
   ["id_hash_collision", (s) => { s.objects = { c2ya8: sphere([0, 0, 1], 1, "m"), czki6: sphere([3, 0, 1], 1, "m") }; }, "E_ID_HASH_COLLISION", "/objects"],
-  ["version_3", (s) => (s.v = 3), "E_ENUM", "/v"],
+  ["version_unknown", (s) => (s.v = 99), "E_ENUM", "/v"],
   ["seed_negative", (s) => (s.seed = -1), "E_RANGE", "/seed"],
   ["seed_2_32", (s) => (s.seed = 4294967296), "E_RANGE", "/seed"],
   ["render_without_camera", (s) => Object.assign(s, { environment: envConst(1), render: render(16, 16, 1, 1) }), "E_RENDER_REQUIRES", ""],

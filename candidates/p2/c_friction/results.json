@@ -1,0 +1,49 @@
+{
+  "set": "c_friction",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "largest relative error of the downhill distance against s = a t (t + h) / 2 over G40's rolling and sliding runs",
+    "variance": "contact-point slip speed at the end of G40's rolling run (0 when it rolls)",
+    "ms": "run of G40 (rolling)",
+    "robustness": "share of 12 random inclines (5-40 deg, mu_s 0.05-1, mu_d = 0.7 mu_s; 1.5 deg around the critical angle excluded) whose roll/slide regime disagrees with tan(theta) <= 3.5 mu_s, or failing a validator"
+  },
+  "scores": [
+    {
+      "error": 0.0031785339214203527,
+      "errorFloor": 0,
+      "variance": 3.423442385645483e-8,
+      "noise": {
+        "variance": 0,
+        "ms": 6.381875000006403
+      },
+      "ms": 111.20345899999666,
+      "failure_rate": 0,
+      "notes": [
+        "distance error 3.18e-3"
+      ],
+      "candidate": "positional static + velocity dynamic",
+      "value": 0,
+      "loc": 0
+    },
+    {
+      "error": 0.007910972149042308,
+      "errorFloor": 0,
+      "variance": 4.6375269128825896e-8,
+      "noise": {
+        "variance": 0,
+        "ms": 2.565082999994047
+      },
+      "ms": 113.1205420000042,
+      "failure_rate": 0,
+      "notes": [
+        "distance error 7.91e-3"
+      ],
+      "candidate": "velocity-level Coulomb",
+      "value": 1,
+      "loc": 0
+    }
+  ],
+  "pareto": [
+    "positional static + velocity dynamic"
+  ]
+}

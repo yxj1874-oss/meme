@@ -1,0 +1,114 @@
+{
+  "v": 3,
+  "seed": 4100,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "objects": {
+    "floor": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "m"
+    },
+    "s0": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0.1
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s1": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0.30000000000000004
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s2": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0.5
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s3": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0.7000000000000001
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.004166666666666667,
+    "substeps": 32,
+    "steps": 960,
+    "record_every_steps": 48,
+    "contacts": "all_pairs"
+  }
+}

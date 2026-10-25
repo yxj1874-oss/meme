@@ -257,8 +257,8 @@
       "file": "src/runtime/physics.ts",
       "edits": [
         {
-          "find": "g * p.dt_s * p.dt_s), p.dt_s], 0);",
-          "replace": "g * p.dt_s), p.dt_s], 0);"
+          "find": "f.set([...p.gravity_m_s2.map((gc) => gc * h * h), h], 0);",
+          "replace": "f.set([...p.gravity_m_s2.map((gc) => gc * h), h], 0);"
         }
       ],
       "expected_red": [
@@ -268,7 +268,7 @@
     {
       "id": "fixed-point-floor",
       "module": "physics",
-      "file": "src/kernels/physics_p0.wgsl",
+      "file": "src/kernels/physics_p2.wgsl",
       "edits": [
         {
           "find": "let whole = trunc(dx);",
@@ -276,7 +276,8 @@
         }
       ],
       "expected_red": [
-        "g16"
+        "g16",
+        "g35"
       ]
     },
     {
@@ -639,6 +640,280 @@
       ],
       "expected_red": [
         "g32"
+      ]
+    },
+    {
+      "id": "alpha-not-over-h2",
+      "module": "joints",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "let alpha = j.compliance * Q.inv_h.x * Q.inv_h.x;",
+          "replace": "let alpha = j.compliance;"
+        }
+      ],
+      "expected_red": [
+        "g37"
+      ]
+    },
+    {
+      "id": "mass-splitting-off",
+      "module": "solver",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    return w * f32(max(n, 1u));",
+          "replace": "    return w;"
+        }
+      ],
+      "expected_red": [
+        "g45",
+        "g41"
+      ]
+    },
+    {
+      "id": "averaging-breaks-momentum",
+      "module": "solver",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "override SOLVER: u32 = 0u;",
+          "replace": "override SOLVER: u32 = 2u;"
+        }
+      ],
+      "expected_red": [
+        "g42",
+        "g39"
+      ]
+    },
+    {
+      "id": "restitution-post-solve-velocity",
+      "module": "contacts",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "let vn_pre = dot(va_pre - vb_pre, c.n);",
+          "replace": "let vn_pre = vn;"
+        }
+      ],
+      "expected_red": [
+        "g38"
+      ]
+    },
+    {
+      "id": "friction-impulse-as-velocity",
+      "module": "contacts",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "var jt = min(mu_d * lambda_n * Q.inv_h.x, stop);",
+          "replace": "var jt = min(mu_d * lambda_n * Q.inv_h.x / (wta + wtb), stop);"
+        }
+      ],
+      "expected_red": [
+        "g40"
+      ]
+    },
+    {
+      "id": "static-friction-off",
+      "module": "contacts",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "if (FRICTION == 0u && mu_s > 0.0) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "expected_red": [
+        "g40"
+      ]
+    },
+    {
+      "id": "friction-mu-mixup",
+      "module": "contacts",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "var jt = min(mu_d * lambda_n * Q.inv_h.x, stop);",
+          "replace": "var jt = min(mu_s * lambda_n * Q.inv_h.x, stop);"
+        }
+      ],
+      "expected_red": [
+        "g40"
+      ]
+    },
+    {
+      "id": "plane-normal-flipped",
+      "module": "contacts",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    c.n = -st.n;",
+          "replace": "    c.n = st.n;"
+        }
+      ],
+      "expected_red": [
+        "g41",
+        "g38"
+      ]
+    },
+    {
+      "id": "contact-normal-sign",
+      "module": "contacts",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "  c.n = select(d / max(dist, 1e-30), vec3<f32>(0.0, 0.0, 1.0), dist < DEGENERATE * rsum);\n  c.ra = props[a].radius * c.n;",
+          "replace": "  c.n = select(-d / max(dist, 1e-30), vec3<f32>(0.0, 0.0, 1.0), dist < DEGENERATE * rsum);\n  c.ra = props[a].radius * c.n;"
+        }
+      ],
+      "expected_red": [
+        "g39"
+      ]
+    },
+    {
+      "id": "joint-gradient-sign",
+      "module": "joints",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    (*out).dx += eb.inv_mass * dl * n;",
+          "replace": "    (*out).dx += -eb.inv_mass * dl * n;"
+        }
+      ],
+      "expected_red": [
+        "g35",
+        "g37"
+      ]
+    },
+    {
+      "id": "angular-correction-sign",
+      "module": "joints",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    (*out).dth += eb.inv_inertia * cross(eb.r, dl * n);",
+          "replace": "    (*out).dth += eb.inv_inertia * cross(dl * n, eb.r);"
+        }
+      ],
+      "expected_red": [
+        "g36"
+      ]
+    },
+    {
+      "id": "inertia-wrong",
+      "module": "physics-host",
+      "file": "src/runtime/physics.ts",
+      "edits": [
+        {
+          "find": "5 / (2 * s.body.mass_kg * s.radius_m * s.radius_m)",
+          "replace": "1 / (s.body.mass_kg * s.radius_m * s.radius_m)"
+        }
+      ],
+      "expected_red": [
+        "g36",
+        "g40"
+      ]
+    },
+    {
+      "id": "hinge-axis-frame",
+      "module": "joints",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    let ab = qrot(eb.q, j.axis_b);",
+          "replace": "    let ab = j.axis_b;"
+        }
+      ],
+      "expected_red": [
+        "g43"
+      ]
+    },
+    {
+      "id": "f32-relative-positions",
+      "module": "physics",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "  return vec3<f32>(hi) + vec3<f32>(lo) * TWO_POW_M32;",
+          "replace": "  return (vec3<f32>(bhi) + vec3<f32>(blo) * TWO_POW_M32) - (vec3<f32>(ahi) + vec3<f32>(alo) * TWO_POW_M32);"
+        }
+      ],
+      "expected_red": [
+        "g44"
+      ]
+    },
+    {
+      "id": "omega-from-quaternion",
+      "module": "physics",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    r.w = me.w_pre + acc.dth * Q.inv_h.x;",
+          "replace": "    let dq = qmul(r.q, qconj(me.q_prev));\n    r.w = select(2.0 * dq.xyz, -2.0 * dq.xyz, dq.w < 0.0) * Q.inv_h.x;"
+        }
+      ],
+      "expected_red": [
+        "g43",
+        "g36"
+      ]
+    },
+    {
+      "id": "velocity-delta-form-off",
+      "module": "physics",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "  b.v = v_start + Q.g_h.xyz + acc.dx * Q.inv_h.x;",
+          "replace": "  b.v = total * Q.inv_h.x;"
+        }
+      ],
+      "expected_red": [
+        "g37",
+        "g35"
+      ]
+    },
+    {
+      "id": "tunnel-check-off",
+      "module": "validators",
+      "file": "src/runtime/run.ts",
+      "edits": [
+        {
+          "find": "pass: dispMax <= 0.5,",
+          "replace": "pass: true,"
+        }
+      ],
+      "expected_red": [
+        "g44"
+      ]
+    },
+    {
+      "id": "energy-check-off",
+      "module": "validators",
+      "file": "src/runtime/run.ts",
+      "edits": [
+        {
+          "find": "if (energyViolation === undefined && !(snap.e_j <= allowed))",
+          "replace": "if (false)"
+        }
+      ],
+      "expected_red": [
+        "g44"
+      ]
+    },
+    {
+      "id": "exp-map-half-angle",
+      "module": "physics",
+      "file": "src/kernels/physics_p2.wgsl",
+      "edits": [
+        {
+          "find": "    let half = 0.5 * angle;",
+          "replace": "    let half = angle;"
+        }
+      ],
+      "expected_red": [
+        "g43",
+        "g40"
       ]
     }
   ]

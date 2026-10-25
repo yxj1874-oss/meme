@@ -62,6 +62,58 @@ const STEPS: Step[] = [
       return out;
     },
   },
+  {
+    from: 2,
+    to: 3,
+    migrate(s) {
+      const out = deepClone(s as Json) as Obj;
+      out["v"] = 3;
+      if (out["physics"] !== undefined) {
+        out["physics"]["integrator"] = "xpbd_p2";
+        out["physics"]["substeps"] = 1;
+        out["physics"]["contacts"] = "none";
+      }
+      return out;
+    },
+    rollback(s) {
+      const lossy: ContractError[] = [];
+      const p = s["physics"] as Obj | undefined;
+      if (p !== undefined) {
+        if (p["substeps"] !== 1) lossy.push({ code: "E_ROLLBACK_LOSSY", path: "/physics/substeps", detail: "v2 integrates one step at a time" });
+        if (p["contacts"] !== "none") lossy.push({ code: "E_ROLLBACK_LOSSY", path: "/physics/contacts", detail: "v2 has no contacts" });
+      }
+      for (const id of Object.keys(s["joints"] ?? {}).sort()) lossy.push({ code: "E_ROLLBACK_LOSSY", path: pointerJoin("/joints", id), detail: "v2 has no joints" });
+      for (const id of Object.keys(s["physics_materials"] ?? {}).sort()) lossy.push({ code: "E_ROLLBACK_LOSSY", path: pointerJoin("/physics_materials", id), detail: "v2 has no physics materials" });
+      const zero = (v: unknown) => v === undefined || (v as number[]).every((x) => x === 0);
+      const identity = (q: unknown) => q === undefined || ((q as number[])[0] === 0 && (q as number[])[1] === 0 && (q as number[])[2] === 0 && (q as number[])[3] === 1);
+      for (const [id, o] of Object.entries(s["objects"] as Obj).sort(([a], [b]) => (a < b ? -1 : 1))) {
+        const at = pointerJoin("/objects", id);
+        if (o["physics_material"] !== undefined) lossy.push({ code: "E_ROLLBACK_LOSSY", path: `${at}/physics_material`, detail: "v2 has no physics materials" });
+        const b = o["body"] as Obj | undefined;
+        if (b === undefined) continue;
+        if (!zero(b["angular_velocity_rad_s"])) lossy.push({ code: "E_ROLLBACK_LOSSY", path: `${at}/body/angular_velocity_rad_s`, detail: "v2 bodies do not rotate" });
+        if (!identity(b["orientation"])) lossy.push({ code: "E_ROLLBACK_LOSSY", path: `${at}/body/orientation`, detail: "v2 bodies do not rotate" });
+      }
+      if (lossy.length > 0) throw new ContractViolation(sortErrors(lossy));
+      const out = deepClone(s as Json) as Obj;
+      out["v"] = 2;
+      delete out["joints"];
+      delete out["physics_materials"];
+      for (const o of Object.values(out["objects"] as Obj)) {
+        delete o["physics_material"];
+        if (o["body"] !== undefined) {
+          delete o["body"]["angular_velocity_rad_s"];
+          delete o["body"]["orientation"];
+        }
+      }
+      if (out["physics"] !== undefined) {
+        out["physics"]["integrator"] = "xpbd_unconstrained_p0";
+        delete out["physics"]["substeps"];
+        delete out["physics"]["contacts"];
+      }
+      return out;
+    },
+  },
 ];
 
 export const LATEST = STEPS[STEPS.length - 1]!.to;

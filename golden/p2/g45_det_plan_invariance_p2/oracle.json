@@ -1,0 +1,93 @@
+{
+  "id": "g45_det_plan_invariance_p2",
+  "title": "P2 solver: steps per submit do not change any output byte; a body that touches nothing does not change the others",
+  "covers": [
+    "determinism",
+    "locality"
+  ],
+  "kills": [
+    "pass-order-dependent",
+    "atomics-in-solver",
+    "pair-orientation"
+  ],
+  "runs": [
+    {
+      "name": "p1",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1073741824,
+        "tile_px": 64,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1
+      }
+    },
+    {
+      "name": "p2",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1073741824,
+        "tile_px": 64,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 7
+      }
+    },
+    {
+      "name": "p3",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1073741824,
+        "tile_px": 64,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 13
+      }
+    },
+    {
+      "name": "p4",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1073741824,
+        "tile_px": 64,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 60
+      }
+    },
+    {
+      "name": "p5",
+      "scene": "scene.json",
+      "plan": {
+        "pass_spp": 1073741824,
+        "tile_px": 64,
+        "submit_batches": 1,
+        "physics_steps_per_dispatch": 1000
+      }
+    },
+    {
+      "name": "extra",
+      "scene": "scene_extra.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "outputs_equal",
+      "runs": [
+        "p1",
+        "p2",
+        "p3",
+        "p4",
+        "p5"
+      ]
+    },
+    {
+      "id": "A2",
+      "kind": "physics_locality",
+      "base": "p1",
+      "with_extra": "extra"
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "p1"
+    }
+  ]
+}

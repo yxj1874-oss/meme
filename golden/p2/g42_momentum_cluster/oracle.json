@@ -1,0 +1,36 @@
+{
+  "id": "g42_momentum_cluster",
+  "title": "64 elastic spheres colliding in zero gravity: total linear momentum kept to rounding; validators pass",
+  "covers": [
+    "conservation.momentum",
+    "contacts.many"
+  ],
+  "kills": [
+    "lambda-not-symmetric",
+    "mass-splitting-count",
+    "averaging-breaks-momentum"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "momentum",
+      "run": "a",
+      "tol": {
+        "value": null,
+        "derivation": "|p(t) - p(0)| <= 2u x substeps x max sum m|v|: each substep rounds every velocity once (v = dx / h in f32); corrections are equal and opposite in exact arithmetic because both bodies evaluate the pair with the same orientation",
+        "source": "Newton's third law; Tonge et al. 2012 mass splitting"
+      }
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "a"
+    }
+  ]
+}

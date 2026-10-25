@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:meme:scene:v2",
-  "title": "meme scene contract v2 (P1 capability set)",
-  "description": "Declarative scene for the meme runtime. v2 accepts exactly what P1 can execute: spheres and planes; materials with base_color, metallic, roughness, ior and two-sided emission (GGX microfacet + exact dielectric Fresnel, Schlick for metals, a delta lobe below roughness^2 = 1e-3); point lights; constant/split environment; pinhole camera; unconstrained XPBD bodies under gravity. Every float carries x-unit plus minimum/maximum. Cross-field rules live in x-semantic-checks and are enforced before any GPU work. v1 scenes are migrated on load (x-migrations).",
+  "$id": "urn:meme:scene:v3",
+  "title": "meme scene contract v3 (P2 capability set)",
+  "description": "Declarative scene for the meme runtime. v3 accepts exactly what P2 can execute: spheres and planes; materials with base_color, metallic, roughness, ior and two-sided emission (GGX microfacet + exact dielectric Fresnel, Schlick for metals, a delta lobe below roughness^2 = 1e-3); point lights; constant/split environment; pinhole camera; rigid sphere bodies under XPBD (Mueller et al. 2020 with substeps, Macklin et al. 2019) with sphere/plane contacts, restitution, static and dynamic friction, and distance / ball / hinge / fixed joints. Every float carries x-unit plus minimum/maximum. Cross-field rules live in x-semantic-checks and are enforced before any GPU work. v1 and v2 scenes are migrated on load (x-migrations).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -31,8 +31,8 @@
   },
   "properties": {
     "v": {
-      "const": 2,
-      "description": "Schema version, bound to golden set p1. v1 scenes are accepted and migrated (migrate_v1_to_v2). Not patchable."
+      "const": 3,
+      "description": "Schema version, bound to golden set p2. v1 and v2 scenes are accepted and migrated (x-migrations). Not patchable."
     },
     "seed": {
       "$ref": "#/$defs/Seed"
@@ -75,6 +75,30 @@
       },
       "minProperties": 0,
       "maxProperties": 4096
+    },
+    "physics_materials": {
+      "type": "object",
+      "description": "Id-keyed map of contact materials (restitution, friction).",
+      "propertyNames": {
+        "$ref": "#/$defs/Id"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/PhysicsMaterial"
+      },
+      "minProperties": 0,
+      "maxProperties": 64
+    },
+    "joints": {
+      "type": "object",
+      "description": "Id-keyed map of joints between rigid bodies or a body and the world. Requires physics.",
+      "propertyNames": {
+        "$ref": "#/$defs/Id"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/Joint"
+      },
+      "minProperties": 0,
+      "maxProperties": 1024
     },
     "lights": {
       "type": "object",
@@ -150,13 +174,13 @@
     "DisplayWhite_cdm2": {
       "type": "number",
       "x-unit": "cd/m2",
-      "minimum": 1e-06,
+      "minimum": 0.000001,
       "maximum": 1000000000
     },
     "Mass_kg": {
       "type": "number",
       "x-unit": "kg",
-      "minimum": 1e-06,
+      "minimum": 0.000001,
       "maximum": 1000000
     },
     "VelocityComponent_m_s": {
@@ -174,14 +198,14 @@
     "Dt_s": {
       "type": "number",
       "x-unit": "s",
-      "minimum": 1e-05,
+      "minimum": 0.00001,
       "maximum": 0.1
     },
     "Vfov_rad": {
       "type": "number",
       "x-unit": "rad",
       "minimum": 0.01,
-      "maximum": 3.0
+      "maximum": 3
     },
     "Vec3_Coord_m": {
       "type": "array",
@@ -379,15 +403,17 @@
         "integrator",
         "gravity_m_s2",
         "dt_s",
+        "substeps",
         "steps",
-        "record_every_steps"
+        "record_every_steps",
+        "contacts"
       ],
       "properties": {
         "integrator": {
           "enum": [
-            "xpbd_unconstrained_p0"
+            "xpbd_p2"
           ],
-          "description": "XPBD loop of Macklin et al. 2016 Alg.1 with zero constraints, delta form: dx = dt*v + dt^2*g; x += dx; v = dx * (1/dt)."
+          "description": "XPBD rigid bodies (Mueller et al. 2020): per step, `substeps` substeps of length h = dt_s / substeps, each one Jacobi iteration with mass splitting (Tonge et al. 2012), then a velocity pass for restitution and dynamic friction. Positions are Q31.32 fixed point and velocities follow the delta form v = (h v + g h^2 + dx_corr) / h; without contacts and joints this is exactly the v2 integrator xpbd_unconstrained_p0."
         },
         "gravity_m_s2": {
           "$ref": "#/$defs/Vec3_Gravity_m_s2"
@@ -405,6 +431,19 @@
           "minimum": 1,
           "maximum": 1000000,
           "description": "State snapshot at step 0, every k steps, and at the final step."
+        },
+        "substeps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Substeps per step, each with one solver iteration (Macklin et al. 2019, Small Steps)."
+        },
+        "contacts": {
+          "enum": [
+            "none",
+            "all_pairs"
+          ],
+          "description": "none: bodies pass through everything. all_pairs: every dynamic sphere collides with every other sphere and with every plane (O(n^2) per substep)."
         }
       }
     },
@@ -452,13 +491,30 @@
         "mass_kg",
         "velocity_m_s"
       ],
-      "description": "Makes a sphere dynamic. center_m is the position at step 0.",
+      "description": "Makes a sphere a rigid body (solid sphere, inertia 2/5 m r^2). center_m and orientation are the state at step 0.",
       "properties": {
         "mass_kg": {
           "$ref": "#/$defs/Mass_kg"
         },
         "velocity_m_s": {
           "$ref": "#/$defs/Vec3_Velocity_m_s"
+        },
+        "angular_velocity_rad_s": {
+          "$ref": "#/$defs/Vec3_AngularVelocity_rad_s",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        "orientation": {
+          "$ref": "#/$defs/Quat_1",
+          "default": [
+            0,
+            0,
+            0,
+            1
+          ]
         }
       }
     },
@@ -488,6 +544,10 @@
             },
             "body": {
               "$ref": "#/$defs/Body"
+            },
+            "physics_material": {
+              "$ref": "#/$defs/Id",
+              "description": "Key of physics_materials; omitted means restitution 0 and no friction."
             }
           }
         },
@@ -500,7 +560,7 @@
             "normal",
             "material"
           ],
-          "description": "Infinite static plane through point_m. Rays with |dot(dir, normal)| < 2^-20 are treated as parallel (miss).",
+          "description": "Infinite static plane through point_m. Rendering: two-sided, rays with |dot(dir, normal)| < 2^-20 are treated as parallel (miss). Physics: a solid half-space below the plane; normal points into free space.",
           "properties": {
             "shape": {
               "const": "plane"
@@ -513,6 +573,10 @@
             },
             "material": {
               "$ref": "#/$defs/Id"
+            },
+            "physics_material": {
+              "$ref": "#/$defs/Id",
+              "description": "Key of physics_materials; omitted means restitution 0 and no friction."
             }
           }
         }
@@ -706,6 +770,233 @@
           }
         }
       ]
+    },
+    "AngularVelocityComponent_rad_s": {
+      "type": "number",
+      "x-unit": "rad/s",
+      "minimum": -1000,
+      "maximum": 1000
+    },
+    "Vec3_AngularVelocity_rad_s": {
+      "type": "array",
+      "x-unit": "rad/s",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/AngularVelocityComponent_rad_s"
+      }
+    },
+    "QuatComponent_1": {
+      "type": "number",
+      "x-unit": "1",
+      "minimum": -1,
+      "maximum": 1
+    },
+    "Quat_1": {
+      "type": "array",
+      "x-unit": "1",
+      "description": "Unit quaternion [x, y, z, w] rotating body-frame vectors into the world frame; | |q| - 1 | must be <= 1e-6 (E_NORM).",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/QuatComponent_1"
+      }
+    },
+    "Friction_1": {
+      "type": "number",
+      "x-unit": "1",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "Compliance_m_N": {
+      "type": "number",
+      "x-unit": "m/N",
+      "minimum": 0,
+      "maximum": 0.01
+    },
+    "Length_m": {
+      "type": "number",
+      "x-unit": "m",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "PhysicsMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "description": "Contact response. Two objects in contact combine as sqrt(friction_a * friction_b) and max(restitution_a, restitution_b) (Box2D b2MixFriction / b2MixRestitution). An object without physics_material uses restitution 0 and no friction.",
+      "properties": {
+        "restitution": {
+          "$ref": "#/$defs/Unit01_1",
+          "default": 0,
+          "description": "Newton's coefficient of restitution; applied to the pre-solve normal velocity, and taken as 0 when that is at most 2 |g| h (Mueller et al. 2020)."
+        },
+        "static_friction": {
+          "$ref": "#/$defs/Friction_1",
+          "default": 0,
+          "description": "Static friction coefficient, enforced as a positional constraint."
+        },
+        "dynamic_friction": {
+          "$ref": "#/$defs/Friction_1",
+          "default": 0,
+          "description": "Dynamic (Coulomb) friction coefficient, applied at velocity level; must not exceed static_friction (E_FRICTION_ORDER)."
+        }
+      }
+    },
+    "Joint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "a",
+            "b",
+            "anchor_a_m",
+            "anchor_b_m",
+            "rest_length_m"
+          ],
+          "description": "Keeps |anchor_b - anchor_a| = rest_length_m.",
+          "properties": {
+            "type": {
+              "const": "distance"
+            },
+            "a": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "b": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "anchor_a_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on a: in a's body frame, or a world point when a is \"world\"."
+            },
+            "anchor_b_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on b, as for a."
+            },
+            "rest_length_m": {
+              "$ref": "#/$defs/Length_m"
+            },
+            "compliance_m_N": {
+              "$ref": "#/$defs/Compliance_m_N",
+              "default": 0,
+              "description": "0 is a rigid rod; > 0 is a spring of stiffness 1 / compliance (XPBD alpha, Macklin et al. 2016)."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "a",
+            "b",
+            "anchor_a_m",
+            "anchor_b_m"
+          ],
+          "description": "Keeps the two anchors coincident (spherical joint).",
+          "properties": {
+            "type": {
+              "const": "ball"
+            },
+            "a": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "b": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "anchor_a_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on a: in a's body frame, or a world point when a is \"world\"."
+            },
+            "anchor_b_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on b, as for a."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "a",
+            "b",
+            "anchor_a_m",
+            "anchor_b_m",
+            "axis_a",
+            "axis_b"
+          ],
+          "description": "Ball joint plus the two axes kept parallel.",
+          "properties": {
+            "type": {
+              "const": "hinge"
+            },
+            "a": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "b": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "anchor_a_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on a: in a's body frame, or a world point when a is \"world\"."
+            },
+            "anchor_b_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on b, as for a."
+            },
+            "axis_a": {
+              "$ref": "#/$defs/Vec3_Dir_1",
+              "description": "Hinge axis in a's body frame (world frame for \"world\")."
+            },
+            "axis_b": {
+              "$ref": "#/$defs/Vec3_Dir_1",
+              "description": "Hinge axis in b's body frame (world frame for \"world\")."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "a",
+            "b",
+            "anchor_a_m",
+            "anchor_b_m"
+          ],
+          "description": "Ball joint plus the relative orientation at step 0 kept (weld).",
+          "properties": {
+            "type": {
+              "const": "fixed"
+            },
+            "a": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "b": {
+              "$ref": "#/$defs/Id",
+              "description": "Object id of a dynamic sphere, or \"world\"."
+            },
+            "anchor_a_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on a: in a's body frame, or a world point when a is \"world\"."
+            },
+            "anchor_b_m": {
+              "$ref": "#/$defs/Vec3_Coord_m",
+              "description": "Attachment point on b, as for a."
+            }
+          }
+        }
+      ]
     }
   },
   "x-unit-vocabulary": {
@@ -719,12 +1010,13 @@
       "s": "second",
       "rad": "radian",
       "cd/m2": "candela per square metre (luminance)",
-      "cd": "candela (luminous intensity of point lights)"
+      "cd": "candela (luminous intensity of point lights)",
+      "rad/s": "radian per second",
+      "m/N": "metre per newton (XPBD compliance alpha, the inverse of a stiffness)"
     },
     "reserved": {
       "m2": "area",
-      "kg/m3": "density (P2)",
-      "m/N": "XPBD compliance alpha (P2)"
+      "kg/m3": "density (P2)"
     }
   },
   "x-rng-streams": {
@@ -749,7 +1041,7 @@
       "3": {
         "name": "physics_perturbation",
         "counter": "(idhash32(id), step, component, 0)",
-        "status": "reserved P2"
+        "status": "reserved; unused in P2 (design P2D11)"
       },
       "4": {
         "name": "harness_fuzz",
@@ -785,7 +1077,7 @@
   "x-semantic-checks": [
     {
       "code": "E_REF_MISSING",
-      "rule": "every objects.*.material is a key of materials"
+      "rule": "every objects.*.material is a key of materials; every objects.*.physics_material is a key of physics_materials"
     },
     {
       "code": "E_RENDER_REQUIRES",
@@ -801,7 +1093,7 @@
     },
     {
       "code": "E_ZERO_VECTOR",
-      "rule": "|v| >= 1e-3 for camera.up, plane normal, environment.up"
+      "rule": "|v| >= 1e-3 for camera.up, plane normal, environment.up, hinge axes"
     },
     {
       "code": "E_PRECISION",
@@ -813,19 +1105,47 @@
     },
     {
       "code": "E_PRECISION_DT",
-      "rule": "if |g| > 0, for every dynamic body: |g| * dt_s >= 2^-16 * V with V = |velocity_m_s| + |g| * dt_s * steps (exact speed bound for unconstrained motion). Guarantees each step's velocity increment is >= 128 ulp(V), so gravity cannot be rounded away in f32."
+      "rule": "physics without contacts and joints, if |g| > 0, for every dynamic body: |g| * h >= 2^-16 * V with h = dt_s / substeps and V = |velocity_m_s| + |g| * dt_s * steps (exact speed bound for free flight). Guarantees each substep's velocity increment is >= 128 ulp(V), so gravity cannot be rounded away in f32. With contacts or joints no a-priori speed bound exists; the run checks the same inequality against the largest speed reached (validator precision.physics)."
     },
     {
       "code": "E_BUDGET",
-      "rule": "width_px * height_px * spp * (max_bounces + 1) * max(1, |objects|) * (strategy == bsdf ? 1 : 2) <= 2^36 and |bodies| * steps <= 2^32"
+      "rule": "width_px * height_px * spp * (max_bounces + 1) * max(1, |objects|) * (strategy == bsdf ? 1 : 2) <= 2^36; physics without contacts and joints: |bodies| * steps * substeps <= 2^32; otherwise |bodies| * (|bodies| + |static spheres| + |planes| + |joints|) * steps * substeps <= 2^36"
     },
     {
       "code": "E_ID_HASH_COLLISION",
-      "rule": "idhash32 distinct among object ids, among material ids and among light ids"
+      "rule": "idhash32 distinct among object ids, among material ids, among light ids, among physics material ids and among joint ids"
     },
     {
       "code": "E_LIGHT_INSIDE",
       "rule": "no point light lies inside or on a sphere: |position_m - center_m| > radius_m"
+    },
+    {
+      "code": "E_INITIAL_OVERLAP",
+      "rule": "contacts all_pairs: at step 0 no dynamic sphere penetrates another sphere or a plane's half-space by more than 2^-20 * radius_m (sum of radii for sphere pairs)"
+    },
+    {
+      "code": "E_MASS_RATIO",
+      "rule": "contacts all_pairs or any joint: max(mass_kg) / min(mass_kg) over dynamic bodies <= 100. A 4-high stack with the heavy body on top keeps penetration <= 1e-3 r at mass ratio 100 (dt 1/240 s, 32 substeps) but not at 1000 (design P2D10: the limit is tightened, the penetration bound is not widened; golden G41)"
+    },
+    {
+      "code": "E_SPIN",
+      "rule": "for every dynamic body: |angular_velocity_rad_s| * h <= 0.5 rad, h = dt_s / substeps"
+    },
+    {
+      "code": "E_NORM",
+      "rule": "every body orientation has | |q| - 1 | <= 1e-6"
+    },
+    {
+      "code": "E_FRICTION_ORDER",
+      "rule": "every physics material has dynamic_friction <= static_friction"
+    },
+    {
+      "code": "E_JOINT_REF",
+      "rule": "joints require physics; a and b are \"world\" or ids of dynamic spheres; at least one of them is a sphere"
+    },
+    {
+      "code": "E_JOINT_SELF",
+      "rule": "a joint's a and b differ"
     }
   ],
   "x-error-codes": {
@@ -868,13 +1188,19 @@
     "conformance": "must pass json-patch-tests (github.com/json-patch/json-patch-tests) tests.json and spec_tests.json"
   },
   "x-migrations": {
-    "current": 2,
+    "current": 3,
     "chain": [
       {
         "from": 1,
         "to": 2,
         "migrate": "add metallic 0, roughness 1, ior 1 to every material; render.integrator pt_bsdf_p0 -> pt_p1 with strategy bsdf; v = 2. Image, AOV and state bytes are unchanged.",
         "rollback": "lossless only if every material has metallic 0 and ior 1, there are no lights and strategy is bsdf; otherwise E_ROLLBACK_LOSSY lists the paths that would be dropped"
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "migrate": "physics.integrator xpbd_unconstrained_p0 -> xpbd_p2 with substeps 1 and contacts none; v = 3. Image, AOV and state bytes are unchanged (golden G46).",
+        "rollback": "lossless only if physics has substeps 1 and contacts none, there are no joints and no physics_materials, no object names a physics_material, and every body has zero angular velocity and the identity orientation; otherwise E_ROLLBACK_LOSSY lists the paths that would be dropped"
       }
     ],
     "rule": "v(n) -> v(n+1) ships migrate_vN_to_vN+1 and rollback_vN+1_to_vN. Rollback is lossless or fails with E_ROLLBACK_LOSSY. Every golden goes through migrate -> rollback -> migrate with an identical scene_hash. The runtime executes only the latest version; older scenes are migrated on load."

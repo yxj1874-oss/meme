@@ -1,4 +1,4 @@
-// Shared by the golden generators (tools/gen_golden.ts for p0, tools/gen_golden_p1.ts for p1):
+// Shared by the golden generators (tools/gen_golden.ts, gen_golden_p1.ts, gen_golden_p2.ts):
 // write a set's files, or with --check report every file that differs from what would be written.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -37,6 +37,16 @@ export function emitSet(setDir: string, goldens: GoldenDef[], check: boolean, ke
         writeFileSync(p, text);
       }
     }
+    // Files left over from an earlier generator version: stale unless recorded (expected.json) or kept.
+    for (const name of existsSync(dir) ? listFiles(dir) : []) {
+      if (name in files || name === "expected.json" || keep(g.id, name)) continue;
+      if (check) {
+        console.log(`stale: ${join(dir, name)}`);
+        drift++;
+      } else {
+        rmSync(join(dir, name));
+      }
+    }
   }
   if (!check) {
     for (const g of readdirSync(setDir, { withFileTypes: true })) {
@@ -44,4 +54,9 @@ export function emitSet(setDir: string, goldens: GoldenDef[], check: boolean, ke
     }
   }
   return drift;
+}
+
+function listFiles(dir: string, prefix = ""): string[] {
+  return readdirSync(join(dir, prefix), { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? listFiles(dir, join(prefix, e.name)) : [join(prefix, e.name)]);
 }

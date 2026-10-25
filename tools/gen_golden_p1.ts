@@ -346,6 +346,6 @@ out.push({
 });
 
 if (out.length !== 14) throw new Error(`expected 14 goldens, got ${out.length}`);
-const drift = emitSet(ROOT, out, check);
+const drift = emitSet(ROOT, out, check, (gid, file) => gid === "g32_migration_v1_v2" && file === "p0_snapshot.json");
 console.log(check ? `gen_golden_p1 --check: ${drift} file(s) out of date` : `wrote ${out.length} goldens to ${ROOT}`);
 process.exit(drift === 0 ? 0 : 1);

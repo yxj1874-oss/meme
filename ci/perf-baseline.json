@@ -5,17 +5,37 @@
       "golden/p0/g01_det_double_run/scene.json": {
         "work": {
           "rays": 1595301,
+          "shadow_rays": 0,
           "isect_tests": 11167107,
           "physics_steps": 768,
-          "gpu_bytes_peak": 690112
+          "physics_substeps": 768,
+          "pair_tests": 0,
+          "constraint_solves": 0,
+          "gpu_bytes_peak": 690400
         }
       },
       "golden/p0/g16_physics_extremes/scene_far.json": {
         "work": {
           "rays": 0,
+          "shadow_rays": 0,
           "isect_tests": 0,
           "physics_steps": 4000,
-          "gpu_bytes_peak": 2352
+          "physics_substeps": 4000,
+          "pair_tests": 0,
+          "constraint_solves": 0,
+          "gpu_bytes_peak": 2384
+        }
+      },
+      "golden/p2/g45_det_plan_invariance_p2/scene.json": {
+        "work": {
+          "rays": 0,
+          "shadow_rays": 0,
+          "isect_tests": 0,
+          "physics_steps": 720,
+          "physics_substeps": 5760,
+          "pair_tests": 40320,
+          "constraint_solves": 5760,
+          "gpu_bytes_peak": 9952
         }
       }
     }

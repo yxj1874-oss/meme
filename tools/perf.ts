@@ -19,7 +19,7 @@ import { nowMs } from "../src/perf/clock.ts";
 
 const ROOT = new URL("../", import.meta.url).pathname;
 const BASELINE = join(ROOT, "ci", "perf-baseline.json");
-const BENCH = ["golden/p0/g01_det_double_run/scene.json", "golden/p0/g16_physics_extremes/scene_far.json"];
+const BENCH = ["golden/p0/g01_det_double_run/scene.json", "golden/p0/g16_physics_extremes/scene_far.json", "golden/p2/g45_det_plan_invariance_p2/scene.json"];
 const ROUNDS = 9;
 const LIMIT = 1.1;
 
@@ -162,6 +162,14 @@ if (baseDir === undefined || !existsSync(join(baseDir, "src"))) {
     process.exit(1);
   }
   for (const s of BENCH) {
+    try {
+      await base.run(s);
+    } catch (err) {
+      // A scene of a newer schema than the base supports has no base to compare with; its work
+      // counters are still gated above.
+      console.log(`SKIP ${s}: wall-time A/B needs the base tree to run it (${String(err).split("\n")[0]})`);
+      continue;
+    }
     let m = await abRatio(head, base, s);
     for (let retry = 0; m.ratio > LIMIT && retry < 2; retry++) m = await abRatio(head, base, s);
     const ok = m.ratio <= LIMIT;

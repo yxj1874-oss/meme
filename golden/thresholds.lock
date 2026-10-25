@@ -733,5 +733,170 @@
     "value": 0.000001,
     "derivation": "rel: camera-relative f32 points within 2 cm carry ~16 ulp(0.02) = 3e-8 m error against r >= 1e-3 m -> 3e-5 on r^2, margin x3",
     "source": "f64 replay; u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g35_pendulum_period/A1.t3_s2": {
+    "value": null,
+    "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+    "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+  },
+  "g35_pendulum_period/A1.t3_s4": {
+    "value": null,
+    "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+    "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+  },
+  "g35_pendulum_period/A1.t10_s2": {
+    "value": null,
+    "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+    "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+  },
+  "g35_pendulum_period/A1.t10_s4": {
+    "value": null,
+    "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+    "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+  },
+  "g35_pendulum_period/A2.t3": {
+    "value": 0.2,
+    "derivation": "the modified equation's damping makes the period error first order in h (ratio 2 for h -> h/2); second-order terms move it by <= 0.05 (f64 analysis: 1.95-1.98) and rounding by <= 2 rounding / error",
+    "source": "modified equation (this design); f64 analysis of the scheme"
+  },
+  "g35_pendulum_period/A2.t10": {
+    "value": 0.2,
+    "derivation": "the modified equation's damping makes the period error first order in h (ratio 2 for h -> h/2); second-order terms move it by <= 0.05 (f64 analysis: 1.95-1.98) and rounding by <= 2 rounding / error",
+    "source": "modified equation (this design); f64 analysis of the scheme"
+  },
+  "g36_physical_pendulum_ball_joint/A1": {
+    "value": 0.0001,
+    "derivation": "requirement: 1e-4 of the period at h = 0.5 ms; a wrong inertia moves it by >= 1e-2 (point mass: 2 pi sqrt(d/g) is 15% shorter)",
+    "source": "parallel-axis theorem; exact pendulum period"
+  },
+  "g36_physical_pendulum_ball_joint/A1#residual_m": {
+    "value": 0.000009810000000000001,
+    "derivation": "per substep gravity sags the anchor by g h^2 before the correction; the 1D projection along the error leaves at most the same again across it through the rotation coupling: 2 g h^2, doubled for rounding and the period-2 mode of the coupling",
+    "source": "XPBD positional constraint (Müller et al. 2020 §3.3.1)"
+  },
+  "g37_compliant_spring/A1": {
+    "value": null,
+    "derivation": "position rounding over the run (2 quanta + 2u|dx| per substep) plus the f32 rounding of the 1 m anchor offset (u L) amplified by the spring over a substep (w h)",
+    "source": "XPBD compliance alpha~ = alpha / h^2 (Macklin et al. 2016); closed form of the scheme"
+  },
+  "g38_restitution_drop/A1.e0": {
+    "value": null,
+    "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+    "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+  },
+  "g38_restitution_drop/A1.e3": {
+    "value": null,
+    "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+    "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+  },
+  "g38_restitution_drop/A1.e7": {
+    "value": null,
+    "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+    "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+  },
+  "g38_restitution_drop/A1.e10": {
+    "value": null,
+    "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+    "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+  },
+  "g39_two_sphere_collision/A1.m1_e10": {
+    "value": null,
+    "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+    "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+  },
+  "g39_two_sphere_collision/A1.m3_e10": {
+    "value": null,
+    "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+    "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+  },
+  "g39_two_sphere_collision/A1.m3_e5": {
+    "value": null,
+    "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+    "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+  },
+  "g39_two_sphere_collision/A1.m100_e10": {
+    "value": null,
+    "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+    "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+  },
+  "g39_two_sphere_collision/A1.m100_e5": {
+    "value": null,
+    "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+    "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+  },
+  "g39_two_sphere_collision/A1.oblique": {
+    "value": null,
+    "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+    "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+  },
+  "g40_rolling_incline/A1.roll": {
+    "value": null,
+    "derivation": "distance along the slope against the scheme's s_n = a t_n (t_n + h) / 2 (velocity is the half-step difference): rounding over the run, plus g h^2 for the first substep settling into the plane and a t h for the substep in which the motion starts; spin: 2 alpha h + 32u; rolling: contact point speed <= 2 g h",
+    "source": "rigid-body dynamics of a rolling and of a sliding sphere; Coulomb friction"
+  },
+  "g40_rolling_incline/A1.slide": {
+    "value": null,
+    "derivation": "distance along the slope against the scheme's s_n = a t_n (t_n + h) / 2 (velocity is the half-step difference): rounding over the run, plus g h^2 for the first substep settling into the plane and a t h for the substep in which the motion starts; spin: 2 alpha h + 32u; rolling: contact point speed <= 2 g h",
+    "source": "rigid-body dynamics of a rolling and of a sliding sphere; Coulomb friction"
+  },
+  "g41_resting_and_stack/A1.single": {
+    "value": 0.001,
+    "derivation": "requirement: penetration <= 1e-3 r for every solver candidate; the mass ratio limit E_MASS_RATIO = 100 is where a 4-high column with the heavy body on top still meets it at dt 1/240 s, 32 substeps (mass splitting on the reference substrate: 6.8e-4 r; ratio 1000 reaches 1.2e-2 r): the limit was tightened, the requirement was not widened (design P2D10). At rest: 2 g h; energy: 16u per substep on the potential energy scale",
+    "source": "design P2-01 G41, P2D10"
+  },
+  "g41_resting_and_stack/A1.equal": {
+    "value": 0.001,
+    "derivation": "requirement: penetration <= 1e-3 r for every solver candidate; the mass ratio limit E_MASS_RATIO = 100 is where a 4-high column with the heavy body on top still meets it at dt 1/240 s, 32 substeps (mass splitting on the reference substrate: 6.8e-4 r; ratio 1000 reaches 1.2e-2 r): the limit was tightened, the requirement was not widened (design P2D10). At rest: 2 g h; energy: 16u per substep on the potential energy scale",
+    "source": "design P2-01 G41, P2D10"
+  },
+  "g41_resting_and_stack/A1.heavy_top": {
+    "value": 0.001,
+    "derivation": "requirement: penetration <= 1e-3 r for every solver candidate; the mass ratio limit E_MASS_RATIO = 100 is where a 4-high column with the heavy body on top still meets it at dt 1/240 s, 32 substeps (mass splitting on the reference substrate: 6.8e-4 r; ratio 1000 reaches 1.2e-2 r): the limit was tightened, the requirement was not widened (design P2D10). At rest: 2 g h; energy: 16u per substep on the potential energy scale",
+    "source": "design P2-01 G41, P2D10"
+  },
+  "g42_momentum_cluster/A1": {
+    "value": null,
+    "derivation": "|p(t) - p(0)| <= 2u x substeps x max sum m|v|: each substep rounds every velocity once (v = dx / h in f32); corrections are equal and opposite in exact arithmetic because both bodies evaluate the pair with the same orientation",
+    "source": "Newton's third law; Tonge et al. 2012 mass splitting"
+  },
+  "g43_joints_fixed_hinge/A1#residual_m": {
+    "value": 0.00001,
+    "derivation": "requirement: a weld holds to 1e-4 of the radius (0.1 m). The drift it fights is w^2 r h^2 = 3.3e-8 m per substep; one Jacobi iteration of the coupled positional and angular constraints removes only a few percent of it per substep, so the steady residual (9.3e-7 m measured on the reference substrate) is not a fixed fraction of the drift that can be derived here",
+    "source": "requirement (design P2-01 G43)"
+  },
+  "g43_joints_fixed_hinge/A1#residual_rad": {
+    "value": 0.00000762939453125,
+    "derivation": "both bodies spin with the same w, so the relative orientation only changes through rounding of the quaternion updates (<= 4u per substep, removed at least by half each substep: 8u) and of the residual measurement; 64u",
+    "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g43_joints_fixed_hinge/A2": {
+    "value": null,
+    "derivation": "as G42",
+    "source": "Newton's third law"
+  },
+  "g43_joints_fixed_hinge/A3#residual_m": {
+    "value": 9.5367431640625e-7,
+    "derivation": "the anchor is the centre, so only rounding moves it",
+    "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g43_joints_fixed_hinge/A3#residual_rad": {
+    "value": 0.0000019073486328125,
+    "derivation": "the off-axis tilt is at least halved every substep (n = 2: positional and angular constraint); what remains is the quaternion update's rounding, <= 4u per substep, so <= 8u steady, doubled for the residual's own rounding: 16u",
+    "source": "XPBD angular constraint (Müller et al. 2020 §3.3.2)"
+  },
+  "g43_joints_fixed_hinge/A3#spin_rel": {
+    "value": 0.0000019073486328125,
+    "derivation": "corrections act along a x b, perpendicular to the axis, so the spin about the axis only sees rounding",
+    "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+  },
+  "g43_joints_fixed_hinge/A3#off_axis_rad_s": {
+    "value": 0.00762939453125,
+    "derivation": "the initial 0.3 rad/s off the axis is at least halved per substep (gone after one record, 400 substeps); what remains is the quaternion update rounding the axis by <= 4u per substep while spinning at 5 rad/s, which the hinge correction turns into a rate of tilt / h: 16u / h",
+    "source": "as above"
+  },
+  "g44_physics_extremes/A1": {
+    "value": 0.001,
+    "derivation": "as G41",
+    "source": "design P2-01 G41"
   }
 }

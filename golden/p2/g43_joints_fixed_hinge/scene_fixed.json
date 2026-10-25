@@ -1,0 +1,91 @@
+{
+  "v": 3,
+  "seed": 4300,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "objects": {
+    "a": {
+      "shape": "sphere",
+      "center_m": [
+        -0.1,
+        0,
+        0
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0.5,
+          -0.26666666666666666,
+          0
+        ],
+        "angular_velocity_rad_s": [
+          0,
+          0,
+          2
+        ]
+      }
+    },
+    "b": {
+      "shape": "sphere",
+      "center_m": [
+        0.1,
+        0,
+        0
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 2,
+        "velocity_m_s": [
+          0.5,
+          0.13333333333333336,
+          0
+        ],
+        "angular_velocity_rad_s": [
+          0,
+          0,
+          2
+        ]
+      }
+    }
+  },
+  "joints": {
+    "weld": {
+      "type": "fixed",
+      "a": "a",
+      "b": "b",
+      "anchor_a_m": [
+        0.1,
+        0,
+        0
+      ],
+      "anchor_b_m": [
+        -0.1,
+        0,
+        0
+      ]
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      0
+    ],
+    "dt_s": 0.002,
+    "substeps": 8,
+    "steps": 500,
+    "record_every_steps": 50,
+    "contacts": "none"
+  }
+}

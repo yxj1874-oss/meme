@@ -1,11 +1,12 @@
-// TypeScript view of schema/scene.schema.json (v2, the latest). Only produced by loadSceneValue(),
+// TypeScript view of schema/scene.schema.json (v3, the latest). Only produced by loadSceneValue(),
 // so every value here is already range-checked, migrated and canonical (defaults expanded); field
 // names carry their units like the schema does.
 
 export type Vec3 = [number, number, number];
+export type Quat = [number, number, number, number];
 
 export interface Scene {
-  v: 2;
+  v: 3;
   seed: number;
   meta?: { name?: string; note?: string };
   camera?: Camera;
@@ -14,6 +15,8 @@ export interface Scene {
   physics?: Physics;
   materials: { [id: string]: Material };
   objects: { [id: string]: SceneObject };
+  physics_materials?: { [id: string]: PhysicsMaterial };
+  joints?: { [id: string]: Joint };
   lights?: { [id: string]: Light };
 }
 
@@ -45,11 +48,13 @@ export interface Render {
 }
 
 export interface Physics {
-  integrator: "xpbd_unconstrained_p0";
+  integrator: "xpbd_p2";
   gravity_m_s2: Vec3;
   dt_s: number;
+  substeps: number;
   steps: number;
   record_every_steps: number;
+  contacts: "none" | "all_pairs";
 }
 
 export interface Material {
@@ -61,14 +66,39 @@ export interface Material {
   ior?: number;
 }
 
+export interface PhysicsMaterial {
+  restitution?: number;
+  static_friction?: number;
+  dynamic_friction?: number;
+}
+
 export interface Body {
   mass_kg: number;
   velocity_m_s: Vec3;
+  angular_velocity_rad_s?: Vec3;
+  orientation?: Quat;
 }
 
 export type SceneObject =
-  | { shape: "sphere"; center_m: Vec3; radius_m: number; material: string; body?: Body }
-  | { shape: "plane"; point_m: Vec3; normal: Vec3; material: string };
+  | { shape: "sphere"; center_m: Vec3; radius_m: number; material: string; physics_material?: string; body?: Body }
+  | { shape: "plane"; point_m: Vec3; normal: Vec3; material: string; physics_material?: string };
 
 export type Sphere = Extract<SceneObject, { shape: "sphere" }>;
 export type Plane = Extract<SceneObject, { shape: "plane" }>;
+
+interface JointCommon {
+  /** Object id of a dynamic sphere, or "world". */
+  a: string;
+  b: string;
+  anchor_a_m: Vec3;
+  anchor_b_m: Vec3;
+}
+
+export type Joint =
+  | (JointCommon & { type: "distance"; rest_length_m: number; compliance_m_N?: number })
+  | (JointCommon & { type: "ball" })
+  | (JointCommon & { type: "hinge"; axis_a: Vec3; axis_b: Vec3 })
+  | (JointCommon & { type: "fixed" });
+
+/** The joint end that means "attached to the world" rather than to a body. */
+export const WORLD = "world";

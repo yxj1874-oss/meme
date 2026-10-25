@@ -1,0 +1,254 @@
+{
+  "v": 3,
+  "seed": 4500,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "physics_materials": {
+    "p": {
+      "restitution": 0.3,
+      "static_friction": 0.6,
+      "dynamic_friction": 0.4
+    }
+  },
+  "objects": {
+    "floor": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "m",
+      "physics_material": "p"
+    },
+    "post": {
+      "shape": "sphere",
+      "center_m": [
+        1.5,
+        0,
+        0.3
+      ],
+      "radius_m": 0.3,
+      "material": "m",
+      "physics_material": "p"
+    },
+    "s1": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0.5
+      ],
+      "radius_m": 0.2,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0.5,
+          0,
+          0
+        ],
+        "angular_velocity_rad_s": [
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    "s2": {
+      "shape": "sphere",
+      "center_m": [
+        0.05,
+        0.02,
+        1.2
+      ],
+      "radius_m": 0.2,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 1.5,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s3": {
+      "shape": "sphere",
+      "center_m": [
+        -0.6,
+        0,
+        1.5
+      ],
+      "radius_m": 0.15,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s4": {
+      "shape": "sphere",
+      "center_m": [
+        -0.6,
+        0.5,
+        1.5
+      ],
+      "radius_m": 0.15,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s5": {
+      "shape": "sphere",
+      "center_m": [
+        1,
+        1,
+        2
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 0.5,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "s6": {
+      "shape": "sphere",
+      "center_m": [
+        1,
+        1.5,
+        2
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 0.5,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "joints": {
+    "rope": {
+      "type": "distance",
+      "a": "world",
+      "b": "s3",
+      "anchor_a_m": [
+        -0.6,
+        0,
+        2.5
+      ],
+      "anchor_b_m": [
+        0,
+        0,
+        0
+      ],
+      "rest_length_m": 1,
+      "compliance_m_N": 0.0001
+    },
+    "link": {
+      "type": "ball",
+      "a": "s3",
+      "b": "s4",
+      "anchor_a_m": [
+        0,
+        0.25,
+        0
+      ],
+      "anchor_b_m": [
+        0,
+        -0.25,
+        0
+      ]
+    },
+    "axle": {
+      "type": "hinge",
+      "a": "world",
+      "b": "s5",
+      "anchor_a_m": [
+        1,
+        1,
+        2
+      ],
+      "anchor_b_m": [
+        0,
+        0,
+        0
+      ],
+      "axis_a": [
+        0,
+        1,
+        0
+      ],
+      "axis_b": [
+        0,
+        1,
+        0
+      ]
+    },
+    "weld": {
+      "type": "fixed",
+      "a": "s5",
+      "b": "s6",
+      "anchor_a_m": [
+        0,
+        0.25,
+        0
+      ],
+      "anchor_b_m": [
+        0,
+        -0.25,
+        0
+      ]
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.004166666666666667,
+    "substeps": 8,
+    "steps": 120,
+    "record_every_steps": 12,
+    "contacts": "all_pairs"
+  }
+}

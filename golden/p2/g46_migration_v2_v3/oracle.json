@@ -1,0 +1,52 @@
+{
+  "id": "g46_migration_v2_v3",
+  "title": "Every p0 and p1 run, migrated to v3 and run by the P2 kernels, reproduces its recorded bytes; migrations round-trip; lossy rollbacks are refused",
+  "covers": [
+    "contract.migration",
+    "regression"
+  ],
+  "kills": [
+    "p0-loop-changed",
+    "migration-defaults",
+    "rollback-not-lossy"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "p0_byte_identity",
+      "snapshot": "p1_snapshot.json",
+      "sets": [
+        "p0",
+        "p1"
+      ]
+    },
+    {
+      "id": "A2",
+      "kind": "migration_roundtrip",
+      "sets": [
+        "p0",
+        "p1",
+        "p2"
+      ]
+    },
+    {
+      "id": "A3",
+      "kind": "rollback_lossy",
+      "to_version": 2,
+      "cases": [
+        {
+          "file": "lossy.json",
+          "expect": [
+            "E_ROLLBACK_LOSSY@/joints/rope",
+            "E_ROLLBACK_LOSSY@/objects/ball/body/angular_velocity_rad_s",
+            "E_ROLLBACK_LOSSY@/objects/ball/physics_material",
+            "E_ROLLBACK_LOSSY@/physics/contacts",
+            "E_ROLLBACK_LOSSY@/physics/substeps",
+            "E_ROLLBACK_LOSSY@/physics_materials/rubber"
+          ]
+        }
+      ]
+    }
+  ]
+}

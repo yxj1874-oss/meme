@@ -1,0 +1,63 @@
+{
+  "id": "g41_resting_and_stack",
+  "title": "Resting contact and 4-sphere columns (equal masses, and mass ratio 100 with the heavy one on top): penetration <= 1e-3 r, at rest, no energy gain, exact symmetry",
+  "covers": [
+    "contacts.resting",
+    "contacts.stack",
+    "mass_ratio"
+  ],
+  "kills": [
+    "mass-splitting-count",
+    "plane-normal-flipped",
+    "restitution-threshold-off"
+  ],
+  "runs": [
+    {
+      "name": "single",
+      "scene": "scene_single.json"
+    },
+    {
+      "name": "equal",
+      "scene": "scene_equal.json"
+    },
+    {
+      "name": "heavy_top",
+      "scene": "scene_heavy_top.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.single",
+      "kind": "stack",
+      "run": "single",
+      "column": true,
+      "tol": {
+        "value": 0.001,
+        "derivation": "requirement: penetration <= 1e-3 r for every solver candidate; the mass ratio limit E_MASS_RATIO = 100 is where a 4-high column with the heavy body on top still meets it at dt 1/240 s, 32 substeps (mass splitting on the reference substrate: 6.8e-4 r; ratio 1000 reaches 1.2e-2 r): the limit was tightened, the requirement was not widened (design P2D10). At rest: 2 g h; energy: 16u per substep on the potential energy scale",
+        "source": "design P2-01 G41, P2D10"
+      }
+    },
+    {
+      "id": "A1.equal",
+      "kind": "stack",
+      "run": "equal",
+      "column": true,
+      "tol": {
+        "value": 0.001,
+        "derivation": "requirement: penetration <= 1e-3 r for every solver candidate; the mass ratio limit E_MASS_RATIO = 100 is where a 4-high column with the heavy body on top still meets it at dt 1/240 s, 32 substeps (mass splitting on the reference substrate: 6.8e-4 r; ratio 1000 reaches 1.2e-2 r): the limit was tightened, the requirement was not widened (design P2D10). At rest: 2 g h; energy: 16u per substep on the potential energy scale",
+        "source": "design P2-01 G41, P2D10"
+      }
+    },
+    {
+      "id": "A1.heavy_top",
+      "kind": "stack",
+      "run": "heavy_top",
+      "column": true,
+      "tol": {
+        "value": 0.001,
+        "derivation": "requirement: penetration <= 1e-3 r for every solver candidate; the mass ratio limit E_MASS_RATIO = 100 is where a 4-high column with the heavy body on top still meets it at dt 1/240 s, 32 substeps (mass splitting on the reference substrate: 6.8e-4 r; ratio 1000 reaches 1.2e-2 r): the limit was tightened, the requirement was not widened (design P2D10). At rest: 2 g h; energy: 16u per substep on the potential energy scale",
+        "source": "design P2-01 G41, P2D10"
+      }
+    }
+  ]
+}

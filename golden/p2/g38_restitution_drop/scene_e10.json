@@ -1,0 +1,67 @@
+{
+  "v": 3,
+  "seed": 3800,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "physics_materials": {
+    "p": {
+      "restitution": 1
+    }
+  },
+  "objects": {
+    "ball": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        1.1
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "floor": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "m",
+      "physics_material": "p"
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.002,
+    "substeps": 4,
+    "steps": 2600,
+    "record_every_steps": 5,
+    "contacts": "all_pairs"
+  }
+}

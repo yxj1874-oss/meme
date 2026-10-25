@@ -1,0 +1,56 @@
+{
+  "v": 3,
+  "seed": 4402,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "objects": {
+    "bullet": {
+      "shape": "sphere",
+      "center_m": [
+        -1,
+        0,
+        0
+      ],
+      "radius_m": 0.01,
+      "material": "m",
+      "body": {
+        "mass_kg": 0.01,
+        "velocity_m_s": [
+          50,
+          0,
+          0
+        ]
+      }
+    },
+    "wall": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0
+      ],
+      "radius_m": 0.05,
+      "material": "m"
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      0
+    ],
+    "dt_s": 0.002,
+    "substeps": 2,
+    "steps": 50,
+    "record_every_steps": 50,
+    "contacts": "all_pairs"
+  }
+}

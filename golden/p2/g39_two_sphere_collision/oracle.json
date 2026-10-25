@@ -1,0 +1,138 @@
+{
+  "id": "g39_two_sphere_collision",
+  "title": "Two smooth spheres, no gravity: Newton's law along the impact normal, tangential velocity kept, momentum kept",
+  "covers": [
+    "contacts.sphere",
+    "contacts.restitution",
+    "conservation.momentum"
+  ],
+  "kills": [
+    "mass-splitting-count",
+    "contact-normal-sign",
+    "lambda-not-symmetric"
+  ],
+  "runs": [
+    {
+      "name": "m1_e10",
+      "scene": "scene_m1_e10.json"
+    },
+    {
+      "name": "m3_e10",
+      "scene": "scene_m3_e10.json"
+    },
+    {
+      "name": "m3_e5",
+      "scene": "scene_m3_e5.json"
+    },
+    {
+      "name": "m100_e10",
+      "scene": "scene_m100_e10.json"
+    },
+    {
+      "name": "m100_e5",
+      "scene": "scene_m100_e5.json"
+    },
+    {
+      "name": "oblique",
+      "scene": "scene_oblique.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.m1_e10",
+      "kind": "collision",
+      "run": "m1_e10",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "restitution": 1,
+      "head_on": true,
+      "tol": {
+        "value": null,
+        "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+        "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+      }
+    },
+    {
+      "id": "A1.m3_e10",
+      "kind": "collision",
+      "run": "m3_e10",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "restitution": 1,
+      "head_on": true,
+      "tol": {
+        "value": null,
+        "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+        "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+      }
+    },
+    {
+      "id": "A1.m3_e5",
+      "kind": "collision",
+      "run": "m3_e5",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "restitution": 0.5,
+      "head_on": true,
+      "tol": {
+        "value": null,
+        "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+        "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+      }
+    },
+    {
+      "id": "A1.m100_e10",
+      "kind": "collision",
+      "run": "m100_e10",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "restitution": 1,
+      "head_on": true,
+      "tol": {
+        "value": null,
+        "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+        "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+      }
+    },
+    {
+      "id": "A1.m100_e5",
+      "kind": "collision",
+      "run": "m100_e5",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "restitution": 0.5,
+      "head_on": true,
+      "tol": {
+        "value": null,
+        "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+        "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+      }
+    },
+    {
+      "id": "A1.oblique",
+      "kind": "collision",
+      "run": "oblique",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "restitution": 1,
+      "head_on": false,
+      "tol": {
+        "value": null,
+        "derivation": "velocities: 32u |v_rel| for one contact's f32 operations, plus 2 |v_rel| times the normal's angle error |v_rel| h / (r_a + r_b) when oblique (the contact is found within one substep of touching); momentum: 8u sum m|v| per substep",
+        "source": "Newton's experimental law; momentum conservation of equal and opposite corrections"
+      }
+    }
+  ]
+}

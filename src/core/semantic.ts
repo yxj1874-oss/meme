@@ -4,8 +4,8 @@
 import { type ContractError, pointerJoin, sortErrors } from "./errors.ts";
 import { idhash32 } from "./hash.ts";
 import { canonicalEntries } from "./jcs.ts";
-import type { Scene } from "./scene_types.ts";
-import { cross, luminanceY, norm, normalize, sub } from "./vec.ts";
+import { type Scene, WORLD } from "./scene_types.ts";
+import { cross, dot, luminanceY, norm, normalize, sub } from "./vec.ts";
 
 const MIN_VECTOR_NORM = 1e-3;
 const MIN_COLOR_Y = 1e-3;
@@ -15,6 +15,14 @@ const PRECISION_RATIO = 2 ** -12;
 const PRECISION_DT_RATIO = 2 ** -16;
 const RENDER_BUDGET = 2 ** 36;
 const PHYSICS_BUDGET = 2 ** 32;
+const CONTACT_BUDGET = 2 ** 36;
+/** Initial penetration allowed by E_INITIAL_OVERLAP, relative to the radius (sum of radii for pairs). */
+const OVERLAP_TOLERANCE = 2 ** -20;
+/** Largest mass ratio among interacting bodies (design P2D10). */
+const MAX_MASS_RATIO = 100;
+/** Largest rotation per substep, |omega| h, in radians (E_SPIN). */
+const MAX_SPIN_STEP = 0.5;
+const NORM_TOLERANCE = 1e-6;
 
 export function semanticErrors(scene: Scene): ContractError[] {
   const errors: ContractError[] = [];
@@ -27,6 +35,9 @@ export function semanticErrors(scene: Scene): ContractError[] {
     const at = pointerJoin("/objects", id);
     if (!(obj.material in scene.materials)) {
       push("E_REF_MISSING", `${at}/material`, `material ${JSON.stringify(obj.material)} is not defined`);
+    }
+    if (obj.physics_material !== undefined && !(obj.physics_material in (scene.physics_materials ?? {}))) {
+      push("E_REF_MISSING", `${at}/physics_material`, `physics material ${JSON.stringify(obj.physics_material)} is not defined`);
     }
     if (obj.shape === "plane") {
       if (norm(obj.normal) < MIN_VECTOR_NORM) push("E_ZERO_VECTOR", `${at}/normal`, `|normal| < ${MIN_VECTOR_NORM}`);
@@ -77,20 +88,80 @@ export function semanticErrors(scene: Scene): ContractError[] {
   }
 
   const bodies = objects.filter(([, o]) => o.shape === "sphere" && o.body !== undefined);
+  const joints = canonicalEntries(scene.joints ?? {});
+  const physicsMaterials = canonicalEntries(scene.physics_materials ?? {});
+  for (const [id, pm] of physicsMaterials) {
+    if ((pm.dynamic_friction ?? 0) > (pm.static_friction ?? 0)) {
+      push("E_FRICTION_ORDER", pointerJoin("/physics_materials", id), `dynamic_friction ${pm.dynamic_friction} > static_friction ${pm.static_friction ?? 0}`);
+    }
+  }
+  for (const [id, o] of bodies) {
+    if (o.shape !== "sphere" || o.body === undefined) continue;
+    const q = o.body.orientation ?? [0, 0, 0, 1];
+    const qn = Math.hypot(...q);
+    if (Math.abs(qn - 1) > NORM_TOLERANCE) push("E_NORM", `${pointerJoin("/objects", id)}/body/orientation`, `|q| = ${qn}, not a unit quaternion`);
+  }
   if (scene.physics !== undefined) {
     const p = scene.physics;
+    const h = p.dt_s / p.substeps;
     const g = norm(p.gravity_m_s2);
-    if (g > 0) {
-      for (const [id, o] of bodies) {
-        if (o.shape !== "sphere" || o.body === undefined) continue;
+    const contacts = p.contacts === "all_pairs";
+    const interacting = contacts || joints.length > 0;
+    for (const [id, o] of bodies) {
+      if (o.shape !== "sphere" || o.body === undefined) continue;
+      const at = `${pointerJoin("/objects", id)}/body`;
+      if (g > 0 && !interacting) {
         const speedBound = norm(o.body.velocity_m_s) + g * p.dt_s * p.steps;
-        if (g * p.dt_s < PRECISION_DT_RATIO * speedBound) {
-          push("E_PRECISION_DT", `${pointerJoin("/objects", id)}/body`,
-            `|g|*dt = ${g * p.dt_s} < 2^-16 * V = ${PRECISION_DT_RATIO * speedBound}; gravity would round away in f32`);
+        if (g * h < PRECISION_DT_RATIO * speedBound) {
+          push("E_PRECISION_DT", at, `|g|*h = ${g * h} < 2^-16 * V = ${PRECISION_DT_RATIO * speedBound}; gravity would round away in f32`);
+        }
+      }
+      const spin = norm(o.body.angular_velocity_rad_s ?? [0, 0, 0]) * h;
+      if (spin > MAX_SPIN_STEP) push("E_SPIN", `${at}/angular_velocity_rad_s`, `|omega| * h = ${spin} rad > ${MAX_SPIN_STEP}`);
+    }
+    if (interacting && bodies.length > 0) {
+      const masses = bodies.map(([, o]) => (o.shape === "sphere" && o.body ? o.body.mass_kg : 1));
+      const ratio = Math.max(...masses) / Math.min(...masses);
+      if (ratio > MAX_MASS_RATIO) push("E_MASS_RATIO", "/objects", `max/min mass of interacting bodies = ${ratio} > ${MAX_MASS_RATIO}`);
+    }
+    if (contacts) {
+      const spheres = objects.filter(([, o]) => o.shape === "sphere");
+      const planes = objects.filter(([, o]) => o.shape === "plane");
+      for (const [id, o] of bodies) {
+        if (o.shape !== "sphere") continue;
+        const at = pointerJoin("/objects", id);
+        for (const [oid, other] of spheres) {
+          if (oid === id || other.shape !== "sphere" || (other.body !== undefined && oid < id)) continue;
+          const sum = o.radius_m + other.radius_m;
+          if (norm(sub(o.center_m, other.center_m)) < sum * (1 - OVERLAP_TOLERANCE)) push("E_INITIAL_OVERLAP", at, `overlaps sphere ${JSON.stringify(oid)} at step 0`);
+        }
+        for (const [pid, pl] of planes) {
+          if (pl.shape !== "plane") continue;
+          const d = dot(normalize(pl.normal), sub(o.center_m, pl.point_m));
+          if (d < o.radius_m * (1 - OVERLAP_TOLERANCE)) push("E_INITIAL_OVERLAP", at, `penetrates plane ${JSON.stringify(pid)} at step 0 (signed distance ${d} < radius ${o.radius_m})`);
         }
       }
     }
-    if (bodies.length * p.steps > PHYSICS_BUDGET) push("E_BUDGET", "/physics", `|bodies| * steps > 2^32`);
+    const staticSpheres = objects.filter(([, o]) => o.shape === "sphere" && o.body === undefined).length;
+    const planeCount = objects.filter(([, o]) => o.shape === "plane").length;
+    if (!interacting && bodies.length * p.steps * p.substeps > PHYSICS_BUDGET) push("E_BUDGET", "/physics", `|bodies| * steps * substeps > 2^32`);
+    if (interacting && bodies.length * (bodies.length + staticSpheres + planeCount + joints.length) * p.steps * p.substeps > CONTACT_BUDGET) {
+      push("E_BUDGET", "/physics", `|bodies| * (|bodies| + |static spheres| + |planes| + |joints|) * steps * substeps > 2^36`);
+    }
+  }
+  const dynamicIds = new Set(bodies.map(([id]) => id));
+  for (const [id, j] of joints) {
+    const at = pointerJoin("/joints", id);
+    if (scene.physics === undefined) push("E_JOINT_REF", at, "joints require physics");
+    for (const end of ["a", "b"] as const) {
+      const ref = j[end];
+      if (ref !== WORLD && !dynamicIds.has(ref)) push("E_JOINT_REF", `${at}/${end}`, `${JSON.stringify(ref)} is neither "world" nor a dynamic sphere`);
+    }
+    if (j.a === j.b) push("E_JOINT_SELF", at, `a and b are both ${JSON.stringify(j.a)}`);
+    if (j.type === "hinge") {
+      if (norm(j.axis_a) < MIN_VECTOR_NORM) push("E_ZERO_VECTOR", `${at}/axis_a`, `|axis_a| < ${MIN_VECTOR_NORM}`);
+      if (norm(j.axis_b) < MIN_VECTOR_NORM) push("E_ZERO_VECTOR", `${at}/axis_b`, `|axis_b| < ${MIN_VECTOR_NORM}`);
+    }
   }
 
   if (scene.render !== undefined) {
@@ -100,7 +171,7 @@ export function semanticErrors(scene: Scene): ContractError[] {
     if (work > RENDER_BUDGET) push("E_BUDGET", "/render", `width*height*spp*(max_bounces+1)*objects*rays = ${work} > 2^36`);
   }
 
-  for (const [ns, entries] of [["/materials", materials], ["/objects", objects], ["/lights", lights]] as const) {
+  for (const [ns, entries] of [["/materials", materials], ["/objects", objects], ["/lights", lights], ["/physics_materials", physicsMaterials], ["/joints", joints]] as const) {
     const owners = new Map<number, string>();
     for (const [id] of entries) {
       const h = idhash32(id);

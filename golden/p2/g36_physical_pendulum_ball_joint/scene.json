@@ -1,0 +1,69 @@
+{
+  "v": 3,
+  "seed": 3600,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "objects": {
+    "s": {
+      "shape": "sphere",
+      "center_m": [
+        0.009995833854135668,
+        0,
+        0.8002499479210068
+      ],
+      "radius_m": 0.2,
+      "material": "m",
+      "body": {
+        "mass_kg": 2,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ],
+        "orientation": [
+          0,
+          -0.024997395914712332,
+          0,
+          0.9996875162757026
+        ]
+      }
+    }
+  },
+  "joints": {
+    "pin": {
+      "type": "ball",
+      "a": "world",
+      "b": "s",
+      "anchor_a_m": [
+        0,
+        0,
+        1
+      ],
+      "anchor_b_m": [
+        0,
+        0,
+        0.2
+      ]
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.002,
+    "substeps": 4,
+    "steps": 770,
+    "record_every_steps": 5,
+    "contacts": "none"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "id": "g38_restitution_drop",
+  "title": "Sphere dropped on a plane: apex heights H_k+1 / H_k = e^2; e = 0 does not bounce",
+  "covers": [
+    "contacts.restitution"
+  ],
+  "kills": [
+    "restitution-post-solve-velocity",
+    "restitution-threshold-off"
+  ],
+  "runs": [
+    {
+      "name": "e0",
+      "scene": "scene_e0.json"
+    },
+    {
+      "name": "e3",
+      "scene": "scene_e3.json"
+    },
+    {
+      "name": "e7",
+      "scene": "scene_e7.json"
+    },
+    {
+      "name": "e10",
+      "scene": "scene_e10.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.e0",
+      "kind": "bounce_heights",
+      "run": "e0",
+      "body": "ball",
+      "restitution": 0,
+      "bounces": 1,
+      "tol": {
+        "value": null,
+        "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+        "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+      }
+    },
+    {
+      "id": "A1.e3",
+      "kind": "bounce_heights",
+      "run": "e3",
+      "body": "ball",
+      "restitution": 0.3,
+      "bounces": 2,
+      "tol": {
+        "value": null,
+        "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+        "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+      }
+    },
+    {
+      "id": "A1.e7",
+      "kind": "bounce_heights",
+      "run": "e7",
+      "body": "ball",
+      "restitution": 0.7,
+      "bounces": 4,
+      "tol": {
+        "value": null,
+        "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+        "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+      }
+    },
+    {
+      "id": "A1.e10",
+      "kind": "bounce_heights",
+      "run": "e10",
+      "body": "ball",
+      "restitution": 1,
+      "bounces": 5,
+      "tol": {
+        "value": null,
+        "derivation": "H_k+1 = (e v)^2 / 2g - e v h / 2 (the scheme's discrete apex after leaving at e v, v = sqrt(2 g H_k)) within 2 e^2 v h + 2 e^2 g h^2 + g h^2 + 8u: the pre-solve approach speed is within [v - g h, v + 2 g h]; apexes are refined by a parabola through three records, exact for the scheme's free flight; e = 0: height after contact <= g h^2, speed <= 2 g h (the restitution threshold)",
+        "source": "Newton's law of restitution; Müller et al. 2020 §3.6"
+      }
+    }
+  ]
+}

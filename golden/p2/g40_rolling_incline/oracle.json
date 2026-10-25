@@ -1,0 +1,78 @@
+{
+  "id": "g40_rolling_incline",
+  "title": "Sphere on an incline: rolls with a = 5/7 g sin, slides with a = g (sin - mu_d cos) and spin 5 mu_d g cos / 2r; the regime flips at tan(theta_c) = 3.5 mu_s",
+  "covers": [
+    "contacts.friction",
+    "rotation",
+    "analytic.rigid"
+  ],
+  "kills": [
+    "friction-impulse-as-velocity",
+    "static-friction-off",
+    "friction-mu-mixup"
+  ],
+  "runs": [
+    {
+      "name": "roll",
+      "scene": "scene_roll.json"
+    },
+    {
+      "name": "slide",
+      "scene": "scene_slide.json"
+    },
+    {
+      "name": "below",
+      "scene": "scene_below.json"
+    },
+    {
+      "name": "above",
+      "scene": "scene_above.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.roll",
+      "kind": "incline",
+      "run": "roll",
+      "body": "ball",
+      "plane": "ramp",
+      "regime": "roll",
+      "mu_d": 0.5,
+      "tol": {
+        "value": null,
+        "derivation": "distance along the slope against the scheme's s_n = a t_n (t_n + h) / 2 (velocity is the half-step difference): rounding over the run, plus g h^2 for the first substep settling into the plane and a t h for the substep in which the motion starts; spin: 2 alpha h + 32u; rolling: contact point speed <= 2 g h",
+        "source": "rigid-body dynamics of a rolling and of a sliding sphere; Coulomb friction"
+      }
+    },
+    {
+      "id": "A1.slide",
+      "kind": "incline",
+      "run": "slide",
+      "body": "ball",
+      "plane": "ramp",
+      "regime": "slide",
+      "mu_d": 0.08,
+      "tol": {
+        "value": null,
+        "derivation": "distance along the slope against the scheme's s_n = a t_n (t_n + h) / 2 (velocity is the half-step difference): rounding over the run, plus g h^2 for the first substep settling into the plane and a t h for the substep in which the motion starts; spin: 2 alpha h + 32u; rolling: contact point speed <= 2 g h",
+        "source": "rigid-body dynamics of a rolling and of a sliding sphere; Coulomb friction"
+      }
+    },
+    {
+      "id": "A2.below",
+      "kind": "incline_regime",
+      "run": "below",
+      "body": "ball",
+      "plane": "ramp",
+      "expect": "roll"
+    },
+    {
+      "id": "A2.above",
+      "kind": "incline_regime",
+      "run": "above",
+      "body": "ball",
+      "plane": "ramp",
+      "expect": "slide"
+    }
+  ]
+}

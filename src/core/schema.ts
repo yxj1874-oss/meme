@@ -20,8 +20,9 @@ const load = (name: string) => JSON.parse(readFileSync(new URL(name, SCHEMA_DIR)
 /** The latest schema: the one the runtime executes and the one MT1 lints. */
 export const sceneSchema = load("scene.schema.json");
 export const LATEST_VERSION = ((sceneSchema["properties"] as Record<string, { const: number }>)["v"]!).const;
+// Frozen earlier versions: scene.schema.v<N>.json for every N below the latest.
 const schemas = new Map<number, Record<string, unknown>>([
-  [1, load("scene.schema.v1.json")],
+  ...Array.from({ length: LATEST_VERSION - 1 }, (_, i) => [i + 1, load(`scene.schema.v${i + 1}.json`)] as const),
   [LATEST_VERSION, sceneSchema],
 ]);
 
@@ -82,7 +83,12 @@ export function declaredVersion(instance: unknown): number {
 }
 
 export function validateSceneSchema(instance: unknown, version = declaredVersion(instance)): ContractError[] {
-  return runValidator(sceneValidators.get(version)!, instance, "#");
+  const errors = runValidator(sceneValidators.get(version)!, instance, "#");
+  // A numeric version no schema knows: the rest of the scene cannot be judged against any of them,
+  // so only /v is reported (otherwise every field the latest version changed would be listed too).
+  const v = typeof instance === "object" && instance !== null ? (instance as { v?: unknown }).v : undefined;
+  if (typeof v === "number" && !schemas.has(v)) return errors.filter((e) => e.path === "/v");
+  return errors;
 }
 
 export function validatePatchEnvelope(instance: unknown): ContractError[] {

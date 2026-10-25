@@ -1,0 +1,104 @@
+{
+  "v": 3,
+  "seed": 4700,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "physics_materials": {
+    "p": {
+      "restitution": 1.5,
+      "static_friction": 0.5,
+      "dynamic_friction": 0.3
+    }
+  },
+  "objects": {
+    "ball": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        0.5
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "physics_material": "p",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "ball2": {
+      "shape": "sphere",
+      "center_m": [
+        1,
+        0,
+        0.5
+      ],
+      "radius_m": 0.1,
+      "material": "m",
+      "body": {
+        "mass_kg": 1,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "floor": {
+      "shape": "plane",
+      "point_m": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "material": "m"
+    }
+  },
+  "joints": {
+    "j": {
+      "type": "distance",
+      "a": "world",
+      "b": "ball",
+      "anchor_a_m": [
+        0,
+        0,
+        2
+      ],
+      "anchor_b_m": [
+        0,
+        0,
+        0
+      ],
+      "rest_length_m": 1.5
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "dt_s": 0.01,
+    "substeps": 4,
+    "steps": 10,
+    "record_every_steps": 10,
+    "contacts": "all_pairs"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "v": 3,
+  "seed": 4301,
+  "materials": {
+    "m": {
+      "base_color": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  },
+  "objects": {
+    "s": {
+      "shape": "sphere",
+      "center_m": [
+        0,
+        0,
+        1
+      ],
+      "radius_m": 0.2,
+      "material": "m",
+      "body": {
+        "mass_kg": 2,
+        "velocity_m_s": [
+          0,
+          0,
+          0
+        ],
+        "angular_velocity_rad_s": [
+          0.3,
+          0,
+          5
+        ]
+      }
+    }
+  },
+  "joints": {
+    "axle": {
+      "type": "hinge",
+      "a": "world",
+      "b": "s",
+      "anchor_a_m": [
+        0,
+        0,
+        1
+      ],
+      "anchor_b_m": [
+        0,
+        0,
+        0
+      ],
+      "axis_a": [
+        0,
+        0,
+        1
+      ],
+      "axis_b": [
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "physics": {
+    "integrator": "xpbd_p2",
+    "gravity_m_s2": [
+      0,
+      0,
+      0
+    ],
+    "dt_s": 0.002,
+    "substeps": 8,
+    "steps": 500,
+    "record_every_steps": 50,
+    "contacts": "none"
+  }
+}

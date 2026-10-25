@@ -1,0 +1,202 @@
+{
+  "id": "g47_schema_v3_corpus",
+  "title": "Schema v3: 20 invalid scenes rejected with exact code and path",
+  "covers": [
+    "contract.schema"
+  ],
+  "kills": [
+    "joint-ref-check",
+    "mass-ratio-check",
+    "overlap-check",
+    "v3-error-mapping"
+  ],
+  "runs": [],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "reject_corpus",
+      "cases": [
+        {
+          "file": "invalid/restitution_over_one.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/physics_materials/p/restitution"
+            }
+          ]
+        },
+        {
+          "file": "invalid/friction_negative.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/physics_materials/p/static_friction"
+            }
+          ]
+        },
+        {
+          "file": "invalid/friction_order.json",
+          "expect": [
+            {
+              "code": "E_FRICTION_ORDER",
+              "path": "/physics_materials/p"
+            }
+          ]
+        },
+        {
+          "file": "invalid/physics_material_missing.json",
+          "expect": [
+            {
+              "code": "E_REF_MISSING",
+              "path": "/objects/ball/physics_material"
+            }
+          ]
+        },
+        {
+          "file": "invalid/joint_ref_missing.json",
+          "expect": [
+            {
+              "code": "E_JOINT_REF",
+              "path": "/joints/j/b"
+            }
+          ]
+        },
+        {
+          "file": "invalid/joint_self.json",
+          "expect": [
+            {
+              "code": "E_JOINT_SELF",
+              "path": "/joints/j"
+            }
+          ]
+        },
+        {
+          "file": "invalid/joint_to_plane.json",
+          "expect": [
+            {
+              "code": "E_JOINT_REF",
+              "path": "/joints/j/b"
+            }
+          ]
+        },
+        {
+          "file": "invalid/joint_type_slider.json",
+          "expect": [
+            {
+              "code": "E_VARIANT",
+              "path": "/joints/j/type"
+            }
+          ]
+        },
+        {
+          "file": "invalid/hinge_zero_axis.json",
+          "expect": [
+            {
+              "code": "E_ZERO_VECTOR",
+              "path": "/joints/j/axis_a"
+            }
+          ]
+        },
+        {
+          "file": "invalid/compliance_negative.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/joints/j/compliance_m_N"
+            }
+          ]
+        },
+        {
+          "file": "invalid/joints_without_physics.json",
+          "expect": [
+            {
+              "code": "E_JOINT_REF",
+              "path": "/joints/j"
+            }
+          ]
+        },
+        {
+          "file": "invalid/mass_ratio.json",
+          "expect": [
+            {
+              "code": "E_MASS_RATIO",
+              "path": "/objects"
+            }
+          ]
+        },
+        {
+          "file": "invalid/initial_overlap.json",
+          "expect": [
+            {
+              "code": "E_INITIAL_OVERLAP",
+              "path": "/objects/ball2"
+            }
+          ]
+        },
+        {
+          "file": "invalid/spin_per_substep.json",
+          "expect": [
+            {
+              "code": "E_SPIN",
+              "path": "/objects/ball/body/angular_velocity_rad_s"
+            }
+          ]
+        },
+        {
+          "file": "invalid/orientation_not_unit.json",
+          "expect": [
+            {
+              "code": "E_NORM",
+              "path": "/objects/ball/body/orientation"
+            }
+          ]
+        },
+        {
+          "file": "invalid/substeps_zero.json",
+          "expect": [
+            {
+              "code": "E_RANGE",
+              "path": "/physics/substeps"
+            }
+          ]
+        },
+        {
+          "file": "invalid/contacts_unknown.json",
+          "expect": [
+            {
+              "code": "E_ENUM",
+              "path": "/physics/contacts"
+            }
+          ]
+        },
+        {
+          "file": "invalid/integrator_v2_in_v3.json",
+          "expect": [
+            {
+              "code": "E_ENUM",
+              "path": "/physics/integrator"
+            }
+          ]
+        },
+        {
+          "file": "invalid/contact_budget.json",
+          "expect": [
+            {
+              "code": "E_BUDGET",
+              "path": "/physics"
+            }
+          ]
+        },
+        {
+          "file": "invalid/joint_id_collision.json",
+          "expect": [
+            {
+              "code": "E_ID_HASH_COLLISION",
+              "path": "/joints"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

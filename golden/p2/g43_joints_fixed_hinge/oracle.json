@@ -1,0 +1,86 @@
+{
+  "id": "g43_joints_fixed_hinge",
+  "title": "Fixed joint keeps two spheres welded while they fly and spin; a hinge keeps spin about its axis and removes spin off it",
+  "covers": [
+    "joints.fixed",
+    "joints.hinge",
+    "rotation"
+  ],
+  "kills": [
+    "angular-correction-sign",
+    "hinge-axis-frame",
+    "fixed-rest-orientation"
+  ],
+  "runs": [
+    {
+      "name": "fixed",
+      "scene": "scene_fixed.json"
+    },
+    {
+      "name": "hinge",
+      "scene": "scene_hinge.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "joints",
+      "run": "fixed",
+      "bounds": {
+        "residual_m": {
+          "value": 0.00001,
+          "derivation": "requirement: a weld holds to 1e-4 of the radius (0.1 m). The drift it fights is w^2 r h^2 = 3.3e-8 m per substep; one Jacobi iteration of the coupled positional and angular constraints removes only a few percent of it per substep, so the steady residual (9.3e-7 m measured on the reference substrate) is not a fixed fraction of the drift that can be derived here",
+          "source": "requirement (design P2-01 G43)"
+        },
+        "residual_rad": {
+          "value": 0.00000762939453125,
+          "derivation": "both bodies spin with the same w, so the relative orientation only changes through rounding of the quaternion updates (<= 4u per substep, removed at least by half each substep: 8u) and of the residual measurement; 64u",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        }
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "momentum",
+      "run": "fixed",
+      "tol": {
+        "value": null,
+        "derivation": "as G42",
+        "source": "Newton's third law"
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "joints",
+      "run": "hinge",
+      "body": "s",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "bounds": {
+        "residual_m": {
+          "value": 9.5367431640625e-7,
+          "derivation": "the anchor is the centre, so only rounding moves it",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "residual_rad": {
+          "value": 0.0000019073486328125,
+          "derivation": "the off-axis tilt is at least halved every substep (n = 2: positional and angular constraint); what remains is the quaternion update's rounding, <= 4u per substep, so <= 8u steady, doubled for the residual's own rounding: 16u",
+          "source": "XPBD angular constraint (Müller et al. 2020 §3.3.2)"
+        },
+        "spin_rel": {
+          "value": 0.0000019073486328125,
+          "derivation": "corrections act along a x b, perpendicular to the axis, so the spin about the axis only sees rounding",
+          "source": "u = 2^-23 (WGSL rounding direction unspecified, §15.7.4: faithful rounding)"
+        },
+        "off_axis_rad_s": {
+          "value": 0.00762939453125,
+          "derivation": "the initial 0.3 rad/s off the axis is at least halved per substep (gone after one record, 400 substeps); what remains is the quaternion update rounding the axis by <= 4u per substep while spinning at 5 rad/s, which the hinge correction turns into a rate of tilt / h: 16u / h",
+          "source": "as above"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "g37_compliant_spring",
+  "title": "Compliant distance joint as a spring: the trajectory is the scheme's closed form x' = (x + h v) / (1 + w^2 h^2)",
+  "covers": [
+    "joints.compliance"
+  ],
+  "kills": [
+    "alpha-not-over-h2"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "spring_scheme",
+      "run": "a",
+      "body": "s",
+      "anchor_m": [
+        0,
+        0,
+        0
+      ],
+      "tol": {
+        "value": null,
+        "derivation": "position rounding over the run (2 quanta + 2u|dx| per substep) plus the f32 rounding of the 1 m anchor offset (u L) amplified by the spring over a substep (w h)",
+        "source": "XPBD compliance alpha~ = alpha / h^2 (Macklin et al. 2016); closed form of the scheme"
+      }
+    }
+  ]
+}

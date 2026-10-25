@@ -1,0 +1,156 @@
+{
+  "id": "g35_pendulum_period",
+  "title": "Point pendulum on a distance joint: period against the XPBD modified equation, first-order convergence to the exact elliptic period",
+  "covers": [
+    "joints.distance",
+    "convergence",
+    "analytic.pendulum"
+  ],
+  "kills": [
+    "alpha-not-over-h2",
+    "joint-gradient-sign",
+    "mass-splitting-count"
+  ],
+  "runs": [
+    {
+      "name": "t3_s2",
+      "scene": "scene_t3_s2.json"
+    },
+    {
+      "name": "t3_s4",
+      "scene": "scene_t3_s4.json"
+    },
+    {
+      "name": "t10_s2",
+      "scene": "scene_t10_s2.json"
+    },
+    {
+      "name": "t10_s4",
+      "scene": "scene_t10_s4.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1.t3_s2",
+      "kind": "pendulum_period",
+      "run": "t3_s2",
+      "body": "bob",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "length_m": 1,
+      "theta0": 0.3,
+      "tol": {
+        "value": null,
+        "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+        "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+      }
+    },
+    {
+      "id": "A1.t3_s4",
+      "kind": "pendulum_period",
+      "run": "t3_s4",
+      "body": "bob",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "length_m": 1,
+      "theta0": 0.3,
+      "tol": {
+        "value": null,
+        "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+        "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+      }
+    },
+    {
+      "id": "A1.t10_s2",
+      "kind": "pendulum_period",
+      "run": "t10_s2",
+      "body": "bob",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "length_m": 1,
+      "theta0": 1,
+      "tol": {
+        "value": null,
+        "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+        "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+      }
+    },
+    {
+      "id": "A1.t10_s4",
+      "kind": "pendulum_period",
+      "run": "t10_s4",
+      "body": "bob",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "length_m": 1,
+      "theta0": 1,
+      "tol": {
+        "value": null,
+        "derivation": "|T - T_mod| / T_exact <= 5/24 (w0 h)^2 + rounding, T_mod from the modified equation theta'' = -(g/L) sin - h (theta'^3 + (g/L) cos theta'); 5/24 is the scheme's second-order period remainder of the linearized equation (f64 analysis in docs/P2-02); rounding: per substep 2 quanta of fixed point and 2u of the f32 step, as time at the zero crossing, plus the energy random walk of velocity rounding (5 x 4u sqrt(substeps), Higham 2002 §3.4) times d ln T / d ln E; residual 8u L (the 1 m offset to the anchor is rounded once per substep)",
+        "source": "Hairer, Lubich, Wanner, Geometric Numerical Integration, ch. IX (modified equations); exact period 4 sqrt(L/g) K(sin(theta0/2))"
+      }
+    },
+    {
+      "id": "A2.t3",
+      "kind": "pendulum_order",
+      "runs": [
+        "t3_s2",
+        "t3_s4"
+      ],
+      "body": "bob",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "length_m": 1,
+      "theta0": 0.3,
+      "ratio": [
+        1.8,
+        2.2
+      ],
+      "tol": {
+        "value": 0.2,
+        "derivation": "the modified equation's damping makes the period error first order in h (ratio 2 for h -> h/2); second-order terms move it by <= 0.05 (f64 analysis: 1.95-1.98) and rounding by <= 2 rounding / error",
+        "source": "modified equation (this design); f64 analysis of the scheme"
+      }
+    },
+    {
+      "id": "A2.t10",
+      "kind": "pendulum_order",
+      "runs": [
+        "t10_s2",
+        "t10_s4"
+      ],
+      "body": "bob",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "length_m": 1,
+      "theta0": 1,
+      "ratio": [
+        1.8,
+        2.2
+      ],
+      "tol": {
+        "value": 0.2,
+        "derivation": "the modified equation's damping makes the period error first order in h (ratio 2 for h -> h/2); second-order terms move it by <= 0.05 (f64 analysis: 1.95-1.98) and rounding by <= 2 rounding / error",
+        "source": "modified equation (this design); f64 analysis of the scheme"
+      }
+    }
+  ]
+}

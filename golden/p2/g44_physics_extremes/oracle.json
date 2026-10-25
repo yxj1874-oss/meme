@@ -1,0 +1,124 @@
+{
+  "id": "g44_physics_extremes",
+  "title": "Extreme inputs: resting exactly in contact, a pile shifted by 4096 m moves bit for bit the same, coincident centres, tunnelling and energy negative controls, NaN in a quaternion",
+  "covers": [
+    "extremes",
+    "determinism.translation",
+    "validators.physics"
+  ],
+  "kills": [
+    "restitution-threshold-off",
+    "f32-relative-positions",
+    "fallback-normal",
+    "tunnel-check-off",
+    "energy-check-off"
+  ],
+  "runs": [
+    {
+      "name": "touching",
+      "scene": "scene_touching.json"
+    },
+    {
+      "name": "pile",
+      "scene": "scene_pile.json"
+    },
+    {
+      "name": "pile_far",
+      "scene": "scene_pile_far.json"
+    },
+    {
+      "name": "tunnel",
+      "scene": "scene_tunnel.json"
+    },
+    {
+      "name": "gain",
+      "scene": "scene_bounce.json",
+      "faults": {
+        "physicsFaults": {
+          "RESTITUTION_GAIN": 1.5
+        }
+      }
+    },
+    {
+      "name": "nan_q",
+      "scene": "scene_pile.json",
+      "faults": {
+        "physicsFaults": {
+          "FAULT_KIND": 5,
+          "FAULT_BODY": 1,
+          "FAULT_STEP": 100,
+          "FAULT_C": 0
+        }
+      }
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "stack",
+      "run": "touching",
+      "tol": {
+        "value": 0.001,
+        "derivation": "as G41",
+        "source": "design P2-01 G41"
+      }
+    },
+    {
+      "id": "A2",
+      "kind": "translation_invariance",
+      "runs": [
+        "pile",
+        "pile_far"
+      ],
+      "offset_m": [
+        4096,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "A3",
+      "kind": "coincident_centres",
+      "scene": "scene_probe.json",
+      "bodies": [
+        "a",
+        "b"
+      ],
+      "centre_m": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "A4",
+      "kind": "validator_fails",
+      "run": "tunnel",
+      "name": "tunnel.physics",
+      "exit_code": 7
+    },
+    {
+      "id": "A5",
+      "kind": "validator_fails",
+      "run": "gain",
+      "name": "energy.physics",
+      "exit_code": 5
+    },
+    {
+      "id": "A6",
+      "kind": "nonfinite_first",
+      "run": "nan_q",
+      "physics": {
+        "step": 100,
+        "body": "b",
+        "field": "q.x"
+      },
+      "exit_code": 4
+    },
+    {
+      "id": "V",
+      "kind": "validators_pass",
+      "run": "pile"
+    }
+  ]
+}

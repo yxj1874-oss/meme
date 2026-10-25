@@ -1,0 +1,52 @@
+{
+  "set": "c_quat",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "relative error of the orientation angle of a free sphere spinning at |w| h = 0.4 for 1 s (exact: |w| t)",
+    "variance": "relative error of G36's physical-pendulum period against 4 sqrt(I_p / m g d) K",
+    "ms": "run of G36",
+    "robustness": "share of 12 random ball-joint pendulums (spin up to 0.1 / h in a random direction) failing a validator"
+  },
+  "scores": [
+    {
+      "error": 0.002685779827936243,
+      "errorFloor": 0,
+      "variance": 0.000007361831567633682,
+      "noise": {
+        "variance": 0,
+        "ms": 21.993124999993597
+      },
+      "ms": 142.4094999999943,
+      "failure_rate": 0,
+      "notes": [
+        "free-spin phase error 2.69e-3 (first order: (h w)^2 / 12 = 1.33e-2)",
+        "G36 period error 7.36e-6"
+      ],
+      "candidate": "first order + normalize",
+      "value": 0,
+      "loc": 4
+    },
+    {
+      "error": 2.565828782521899e-8,
+      "errorFloor": 0,
+      "variance": 0.000007361831567633682,
+      "noise": {
+        "variance": 0,
+        "ms": 11.229666999992332
+      },
+      "ms": 148.73666699999012,
+      "failure_rate": 0,
+      "notes": [
+        "free-spin phase error 2.57e-8 (first order: (h w)^2 / 12 = 1.33e-2)",
+        "G36 period error 7.36e-6"
+      ],
+      "candidate": "exponential map",
+      "value": 1,
+      "loc": 6
+    }
+  ],
+  "pareto": [
+    "first order + normalize",
+    "exponential map"
+  ]
+}

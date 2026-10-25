@@ -15,10 +15,10 @@ test("migration chain ends at the schema's latest version", () => {
   assert.equal(LATEST, LATEST_VERSION);
 });
 
-test("v1 scenes load through migration to canonical v2 with Lambert-equivalent defaults", () => {
+test("v1 scenes load through migration to canonical v3 with Lambert-equivalent defaults", () => {
   const loaded = loadSceneText(p0("g01_det_double_run/scene.json"));
-  assert.deepEqual(loaded.migrated_from, [1, 2]);
-  assert.equal(loaded.scene.v, 2);
+  assert.deepEqual(loaded.migrated_from, [1, 2, 3]);
+  assert.equal(loaded.scene.v, 3);
   assert.equal(loaded.scene.render!.integrator, "pt_p1");
   assert.equal(loaded.scene.render!.strategy, "bsdf");
   for (const m of Object.values(loaded.scene.materials)) assert.deepEqual([m.metallic, m.roughness, m.ior], [0, 1, 1]);
@@ -54,6 +54,47 @@ test("lossy rollback names every path that would be dropped", () => {
       "E_ROLLBACK_LOSSY@/materials/a/metallic",
       "E_ROLLBACK_LOSSY@/materials/b/ior",
       "E_ROLLBACK_LOSSY@/render/strategy",
+    ]);
+  }
+});
+
+test("v2 physics migrates to xpbd_p2 with one substep and no contacts, and rolls back losslessly", () => {
+  const loaded = loadSceneText(p0("g17_free_fall_analytic/scene_dt.json"));
+  assert.deepEqual(loaded.scene.physics!.integrator, "xpbd_p2");
+  assert.equal(loaded.scene.physics!.substeps, 1);
+  assert.equal(loaded.scene.physics!.contacts, "none");
+  for (const o of Object.values(loaded.scene.objects)) {
+    if (o.shape === "sphere" && o.body) assert.deepEqual([o.body.angular_velocity_rad_s, o.body.orientation], [[0, 0, 0], [0, 0, 0, 1]]);
+  }
+  const back = rollbackTo(loaded.scene as unknown as Json, 2) as any;
+  assert.equal(back.physics.integrator, "xpbd_unconstrained_p0");
+  assert.equal(back.physics.substeps, undefined);
+});
+
+test("lossy v3 -> v2 rollback names contacts, substeps, joints, physics materials and rotation", () => {
+  const v3 = loadSceneValue({
+    v: 3, seed: 1,
+    materials: { m: { base_color: [1, 1, 1] } },
+    physics_materials: { rubber: { restitution: 0.8, static_friction: 0.9, dynamic_friction: 0.7 } },
+    objects: {
+      ball: { shape: "sphere", center_m: [0, 0, 1], radius_m: 0.1, material: "m", physics_material: "rubber", body: { mass_kg: 1, velocity_m_s: [0, 0, 0], angular_velocity_rad_s: [0, 0, 1] } },
+      floor: { shape: "plane", point_m: [0, 0, 0], normal: [0, 0, 1], material: "m" },
+    },
+    joints: { rope: { type: "distance", a: "world", b: "ball", anchor_a_m: [0, 0, 2], anchor_b_m: [0, 0, 0], rest_length_m: 1 } },
+    physics: { integrator: "xpbd_p2", gravity_m_s2: [0, 0, -9.81], dt_s: 0.01, substeps: 4, steps: 10, record_every_steps: 10, contacts: "all_pairs" },
+  } as unknown as Json);
+  try {
+    rollbackTo(v3.scene as unknown as Json, 2);
+    assert.fail("rollback should be lossy");
+  } catch (err) {
+    assert.ok(err instanceof ContractViolation);
+    assert.deepEqual(err.errors.map((e) => `${e.code}@${e.path}`), [
+      "E_ROLLBACK_LOSSY@/joints/rope",
+      "E_ROLLBACK_LOSSY@/objects/ball/body/angular_velocity_rad_s",
+      "E_ROLLBACK_LOSSY@/objects/ball/physics_material",
+      "E_ROLLBACK_LOSSY@/physics/contacts",
+      "E_ROLLBACK_LOSSY@/physics/substeps",
+      "E_ROLLBACK_LOSSY@/physics_materials/rubber",
     ]);
   }
 });

@@ -1,0 +1,47 @@
+{
+  "id": "g36_physical_pendulum_ball_joint",
+  "title": "Solid sphere hung by a ball joint at its top: period 4 sqrt(I_p / (m g d)) K(sin(theta0/2)) with I_p = 2/5 m r^2 + m r^2",
+  "covers": [
+    "joints.ball",
+    "rotation",
+    "analytic.pendulum"
+  ],
+  "kills": [
+    "inertia-missing",
+    "angular-correction-sign",
+    "omega-from-quaternion"
+  ],
+  "runs": [
+    {
+      "name": "a",
+      "scene": "scene.json"
+    }
+  ],
+  "asserts": [
+    {
+      "id": "A1",
+      "kind": "physical_pendulum",
+      "run": "a",
+      "body": "s",
+      "anchor_m": [
+        0,
+        0,
+        1
+      ],
+      "pivot_distance_m": 0.2,
+      "theta0": 0.05,
+      "tol": {
+        "value": 0.0001,
+        "derivation": "requirement: 1e-4 of the period at h = 0.5 ms; a wrong inertia moves it by >= 1e-2 (point mass: 2 pi sqrt(d/g) is 15% shorter)",
+        "source": "parallel-axis theorem; exact pendulum period"
+      },
+      "bounds": {
+        "residual_m": {
+          "value": 0.000009810000000000001,
+          "derivation": "per substep gravity sags the anchor by g h^2 before the correction; the 1D projection along the error leaves at most the same again across it through the rotation coupling: 2 g h^2, doubled for rounding and the period-2 mode of the coupling",
+          "source": "XPBD positional constraint (Müller et al. 2020 §3.3.1)"
+        }
+      }
+    }
+  ]
+}

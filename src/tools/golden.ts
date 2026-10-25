@@ -30,6 +30,7 @@ interface RunSpec {
   plan?: Partial<ExecutionPlan>;
   faults?: Omit<RunOptions, "plan" | "candidates">;
   candidates?: RunOptions["candidates"];
+  physics_candidates?: RunOptions["physicsCandidates"];
   patches?: string[];
 }
 
@@ -78,7 +79,7 @@ export async function verifyGoldens(ids: string[], requireHashes = false, log: (
     try {
       for (const spec of oracle.runs) {
         const loaded = loadRunScene(dir, spec);
-        const options: RunOptions = { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}), ...(spec.candidates ? { candidates: spec.candidates } : {}) };
+        const options: RunOptions = { plan: { ...DEFAULT_PLAN, ...(spec.plan ?? {}) }, ...(spec.faults ?? {}), ...(spec.candidates ? { candidates: spec.candidates } : {}), ...(spec.physics_candidates ? { physicsCandidates: spec.physics_candidates } : {}) };
         ctx.runs.set(spec.name, { loaded, output: await runScene(gpu, loaded, substrate, options) });
       }
       for (const a of oracle.asserts) results.push(...(await evaluate(ctx, a)));

@@ -1,0 +1,70 @@
+{
+  "set": "c_solver",
+  "substrate": "llvmpipe: Mesa 25.0.7-2+deb13u1 (LLVM 19.1.7) 0.0.1",
+  "measures": {
+    "error": "largest penetration / r of G41's column with the heavy body on top (mass ratio 100)",
+    "variance": "linear momentum change / (sum m|v|) at the end of G42 (64 colliding spheres); noise: the rounding bound 2u per substep",
+    "ms": "run of G42 (64 spheres, 4000 substeps)",
+    "robustness": "share of 40 random scenes failing: 12 piles of 6 spheres (masses 1-100, friction, e <= 0.3) with a validator failing or penetration > 1e-3 r after 1 s, 12 zero-g clusters losing momentum beyond 2u per substep, and 16 chains of 5 spheres hung from the world with random joint types (distance, ball, hinge, fixed; every inner body carries two joints) with a validator failing within 2 s"
+  },
+  "scores": [
+    {
+      "error": 0.0006786691956223168,
+      "errorFloor": 0,
+      "variance": 1.9275861185041033e-8,
+      "noise": {
+        "variance": 0.00095367431640625,
+        "ms": 14.946791999998823
+      },
+      "ms": 773.5747080000001,
+      "failure_rate": 0,
+      "notes": [
+        "G41 heavy-top penetration 6.79e-4 r",
+        "G42 momentum change 1.93e-8 of the scale"
+      ],
+      "candidate": "Jacobi + mass splitting",
+      "value": 0,
+      "loc": 3
+    },
+    {
+      "error": 0.00033985171467076913,
+      "errorFloor": 0,
+      "variance": 1.7204822800092757e-8,
+      "noise": {
+        "variance": 0.00095367431640625,
+        "ms": 12.089833000005456
+      },
+      "ms": 598.5752919999941,
+      "failure_rate": 0.375,
+      "notes": [
+        "G41 heavy-top penetration 3.40e-4 r",
+        "G42 momentum change 1.72e-8 of the scale"
+      ],
+      "candidate": "plain Jacobi",
+      "value": 1,
+      "loc": 1
+    },
+    {
+      "error": 0.00034604500979196207,
+      "errorFloor": 0,
+      "variance": 0.006745612031987236,
+      "noise": {
+        "variance": 0.00095367431640625,
+        "ms": 12.998374000017066
+      },
+      "ms": 774.3594580000063,
+      "failure_rate": 0,
+      "notes": [
+        "G41 heavy-top penetration 3.46e-4 r",
+        "G42 momentum change 6.75e-3 of the scale"
+      ],
+      "candidate": "Jacobi averaged",
+      "value": 2,
+      "loc": 1
+    }
+  ],
+  "pareto": [
+    "Jacobi + mass splitting",
+    "Jacobi averaged"
+  ]
+}
